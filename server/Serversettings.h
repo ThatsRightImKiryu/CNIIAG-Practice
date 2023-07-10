@@ -13,4 +13,5 @@ char ASK[4] ="ask";
 char INIT[4] ="ini";
 char STAT[4] ="sta";
 
+const short CMD_SIZE = 4;
 #endif // SETTINGS_H

@@ -9,7 +9,7 @@
 
 typedef struct {
     uint16_t id;
-    char command[4];
+    char command[CMD_SIZE];
 } ClientStruct;
 
 
@@ -42,7 +42,7 @@ void Server::initSocket(QHostAddress address, int port){
     connect(udpSocket, &QUdpSocket::readyRead,
                 this, &Server::readPendingDatagrams);
 
-    qDebug()<<"Server Listening on address="<<address<<":"<<port<<udpSocket;
+    qDebug()<<"Server Listening on address="<<address<<":"<<port;
 }
 
 void Server::readPendingDatagrams()
@@ -53,14 +53,13 @@ void Server::readPendingDatagrams()
 
         datagram.resize(udpSocket->pendingDatagramSize());
         udpSocket->readDatagram(datagram.data(), datagram.size(), address);
-        ClientStruct readData = *(ClientStruct *)datagram.data();
 
+        ClientStruct readData = *reinterpret_cast<ClientStruct *>(datagram.data());
         std::cout<<"Read successfully "<<readData.command<<readData.id<<std::endl;
-        qDebug() << datagram.data();
-        if(!qstrcmp(readData.command, "ini")){
+        if(!qstrcmp(readData.command, INIT)){
             int checkSum = makeCheckSum(datagram);
             addSession(checkSum);
-            sendDatagram(checkSum, "ask", *address, CLIENT_PORT);
+            sendDatagram(checkSum, ASK, *address, CLIENT_PORT);
         }
     }
 
@@ -68,12 +67,12 @@ void Server::readPendingDatagrams()
 
 void Server::sendDatagram(int checkSum, char command[], QHostAddress address, int port){
     QByteArray datagram;
-    char *intBytes = (char *)&checkSum;
-    datagram.append(command, 4);
-    datagram.append(intBytes, 4);
+    char *intBytes = reinterpret_cast<char*>(&checkSum);
+    datagram.append(command, CMD_SIZE);
+    datagram.append(intBytes, sizeof(checkSum));
 
     udpSocket->writeDatagram(datagram, address, port);
-    std::cout<<"Sent successfully"<<std::endl;
+    std::cout<<"Sent successfully "<<command<<std::endl;
 }
 
 void Server::addSession(int checkSum){
@@ -89,5 +88,5 @@ void Server::addSession(int checkSum){
 
 int Server::makeCheckSum(QByteArray datagram){
     datagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
-    return *(int*)datagram.data();
+    return *reinterpret_cast<int*>(datagram.data());;
 }

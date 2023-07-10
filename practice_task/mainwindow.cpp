@@ -4,7 +4,7 @@
 #include <QCryptographicHash>
 #include <Clientsettings.h>
 typedef struct {
-    char command[4];
+    char command[CMD_SIZE];
     int checkSum;
 } ServerStruct;
 
@@ -38,8 +38,8 @@ void MainWindow::on_pushButton_clicked()
 
     QHostAddress address = QHostAddress(slist.value(0));
     int port = slist.value(1).toInt();
-    qDebug()<<"HSOT"<<address<<port;
-    sendDatagram("ini", clientId, address, port);
+
+    sendDatagram(INIT, clientId, address, port);
 }
 
 
@@ -50,7 +50,7 @@ void MainWindow::initSocket(QHostAddress address, int port){
     udpSocket->bind(address, port);
     connect(udpSocket, &QUdpSocket::readyRead,
                 this, &MainWindow::readPendingDatagrams);
-    std::cout<<"Listening"<<std::endl;
+    qInfo()<<"Listening client on "<<address<<port;
 }
 
 void MainWindow::readPendingDatagrams()
@@ -62,9 +62,9 @@ void MainWindow::readPendingDatagrams()
         datagram.resize(udpSocket->pendingDatagramSize());
         udpSocket->readDatagram(datagram.data(), datagram.size(), address);
 
-        ServerStruct readData = *(ServerStruct *)datagram.data();
+        ServerStruct readData = *reinterpret_cast<ServerStruct *>(datagram.data());
         std::cout<<"Read successfully "<<readData.command<<std::endl;
-        if(!strcmp(readData.command, "ask")){
+        if(!strcmp(readData.command, ASK)){
             qDebug()<<"ASK package";
             if(readData.checkSum==checkSum){
                 qDebug()<<"Package got successfully";
@@ -81,19 +81,18 @@ void MainWindow::sendDatagram(char command[], uint16_t id, QHostAddress address,
     QByteArray datagram;
     char *idBytes = reinterpret_cast<char*>(&id);
 
-    datagram.append(idBytes, 2);
-    datagram.append(command, 4);
+    datagram.append(idBytes, sizeof(id));
+    datagram.append(command, CMD_SIZE);
 
-    if(!strcmp(command, "ini") && checkSum == 0)
+    if(!strcmp(command, INIT) && !checkSum)
         checkSum = makeCheckSum(datagram);
-    qInfo()<<checkSum<<"Check sum is";
 
     udpSocket->writeDatagram(datagram, address, port);
-    std::cout<<"Sent successfully"<<std::endl;
+    std::cout<<"Sent successfully "<<command<<std::endl;
 
 }
 
 int MainWindow::makeCheckSum(QByteArray datagram){
     datagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
-    return *(int*)datagram.data();
+    return *reinterpret_cast<int*>(datagram.data());
 }
