@@ -26,6 +26,8 @@ public:
 private slots:
     void on_pushButton_clicked();
 
+    void on_statBtn_clicked();
+
 private:
     Ui::MainWindow *ui;
 

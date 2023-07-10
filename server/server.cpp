@@ -19,7 +19,7 @@ QUdpSocket *udpSocket;
 
 Server::Server(QHostAddress address, int port)
 {
-    initSocket(address, port);
+        initSocket(address, port);
 }
 
 Server::Server()
@@ -48,6 +48,9 @@ void Server::initSocket(QHostAddress address, int port){
 void Server::readPendingDatagrams()
 {
     while (udpSocket->hasPendingDatagrams()) {
+
+        cmdCount++;
+
         QByteArray datagram;// = udpSocket->receiveDatagram();
         QHostAddress* address = new QHostAddress();
 
@@ -56,11 +59,21 @@ void Server::readPendingDatagrams()
 
         ClientStruct readData = *reinterpret_cast<ClientStruct *>(datagram.data());
         std::cout<<"Read successfully "<<readData.command<<readData.id<<std::endl;
+
+        int checkSum = makeCheckSum(datagram);
+
         if(!qstrcmp(readData.command, INIT)){
-            int checkSum = makeCheckSum(datagram);
-            addSession(checkSum);
+            addSession(readData.id);
             sendDatagram(checkSum, ASK, *address, CLIENT_PORT);
         }
+        qDebug()<<"CHeck init and stat"<<isInit(readData.id)<<!qstrcmp(readData.command, STAT);
+        if(isInit(readData.id) && !qstrcmp(readData.command, STAT)){
+            std::time_t currentTime = std::time(nullptr);
+            qDebug()<<"CHECK time"<<currentTime<< currentTime - startTime;
+            sendDatagram(checkSum, STAT, currentTime, currentTime - startTime, *address, CLIENT_PORT);
+        }
+//        else std::cout<<"You need to init"<<std::endl;
+
     }
 
 }
@@ -75,18 +88,47 @@ void Server::sendDatagram(int checkSum, char command[], QHostAddress address, in
     std::cout<<"Sent successfully "<<command<<std::endl;
 }
 
-void Server::addSession(int checkSum){
-    for(auto x: sessions){
-        if(x == checkSum){
-            std::cout<<"Session WAS ALREADY init"<<std::endl;
-            return;
-        }
+void Server::sendDatagram(int checkSum, char command[],  std::time_t currentTime,
+                          std::time_t fullTime, QHostAddress address, int port){
+    QByteArray datagram;
+
+    char *intBytes = reinterpret_cast<char*>(&checkSum);
+    datagram.append(command, CMD_SIZE);
+    datagram.append(intBytes, sizeof(checkSum));
+
+    char *time = reinterpret_cast<char*>(&currentTime);
+    datagram.append(time, sizeof(currentTime));
+
+    time = reinterpret_cast<char*>(&fullTime);
+    datagram.append(time, sizeof(fullTime));
+
+    udpSocket->writeDatagram(datagram, address, port);
+    std::cout<<"Sent successfully "<<command<<std::endl;
+}
+
+
+void Server::addSession(int id){
+    if(isInit(id)){
+        std::cout<<"Session WAS ALREADY init"<<std::endl;
     }
-    sessions.push_back(checkSum);
-    std::cout<<"Session IS init successfully"<<std::endl;
+    else
+    {
+        sessions.push_back(id);
+        std::cout<<"Session IS init successfully"<<std::endl;
+    }
 }
 
 int Server::makeCheckSum(QByteArray datagram){
     datagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(datagram.data());;
 }
+
+bool Server::isInit(int id){
+    for(auto x: sessions){
+        if(x == id){
+            return true;
+        }
+    }
+    return false;
+}
+

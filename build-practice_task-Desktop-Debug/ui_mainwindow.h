@@ -26,6 +26,7 @@ public:
     QWidget *centralwidget;
     QPushButton *pushButton;
     QLineEdit *lineEdit;
+    QPushButton *statBtn;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -42,6 +43,9 @@ public:
         lineEdit = new QLineEdit(centralwidget);
         lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
         lineEdit->setGeometry(QRect(230, 200, 121, 25));
+        statBtn = new QPushButton(centralwidget);
+        statBtn->setObjectName(QString::fromUtf8("statBtn"));
+        statBtn->setGeometry(QRect(400, 260, 89, 25));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -62,6 +66,7 @@ public:
         pushButton->setText(QCoreApplication::translate("MainWindow", "Send package", nullptr));
         lineEdit->setText(QCoreApplication::translate("MainWindow", "127.0.0.1:4335", nullptr));
         lineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "init/status", nullptr));
+        statBtn->setText(QCoreApplication::translate("MainWindow", "Status", nullptr));
     } // retranslateUi
 
 };

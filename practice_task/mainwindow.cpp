@@ -8,6 +8,12 @@ typedef struct {
     int checkSum;
 } ServerStruct;
 
+typedef struct {
+    char command[CMD_SIZE];
+    int checkSum;
+    uint64_t currentTime;
+    uint64_t fullTime;
+} StatStruct;
 
 short session_id;
 QUdpSocket *udpSocket;
@@ -42,6 +48,17 @@ void MainWindow::on_pushButton_clicked()
     sendDatagram(INIT, clientId, address, port);
 }
 
+void MainWindow::on_statBtn_clicked()
+{
+    QString LEText = ui->lineEdit->text();
+    QStringList slist = LEText.split(":");
+
+    QHostAddress address = QHostAddress(slist.value(0));
+    int port = slist.value(1).toInt();
+
+    sendDatagram(STAT, clientId, address, port);
+}
+
 
 //-----------Socket Methods-----------//
 
@@ -70,7 +87,12 @@ void MainWindow::readPendingDatagrams()
                 qDebug()<<"Package got successfully";
             }
             else qDebug()<<"Package sending FAILED";
+        }
 
+        if(!strcmp(readData.command, STAT)){
+            StatStruct readData = *reinterpret_cast<StatStruct *>(datagram.data());
+
+            qDebug()<<"STAT package"<<readData.currentTime<<readData.fullTime<<datagram.data();
         }
     }
 
@@ -96,3 +118,5 @@ int MainWindow::makeCheckSum(QByteArray datagram){
     datagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(datagram.data());
 }
+
+
