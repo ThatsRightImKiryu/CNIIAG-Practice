@@ -29,6 +29,8 @@ private slots:
 
     void on_statBtn_clicked();
 
+    void on_endSessionBtn_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -37,8 +39,10 @@ private:
     void sendDatagram(char command[], uint16_t id,QHostAddress address, int port);
     int makeCheckSum(QByteArray datagram);
     void addAddress(QHostAddress* address, uint16_t* port);
+    void removeAddress(QHostAddress address, uint16_t port);
+
     bool isInit(QString address);
     bool isInit(QHostAddress* address, uint16_t* port);
-    void fillTable(QString address);
+    void fillTable();
 };
 #endif // MAINWINDOW_H

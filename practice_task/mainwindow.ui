@@ -19,7 +19,7 @@
      <rect>
       <x>560</x>
       <y>160</y>
-      <width>141</width>
+      <width>191</width>
       <height>25</height>
      </rect>
     </property>
@@ -32,7 +32,7 @@
      <rect>
       <x>390</x>
       <y>160</y>
-      <width>121</width>
+      <width>151</width>
       <height>25</height>
      </rect>
     </property>
@@ -48,7 +48,7 @@
      <rect>
       <x>560</x>
       <y>220</y>
-      <width>89</width>
+      <width>191</width>
       <height>25</height>
      </rect>
     </property>
@@ -75,9 +75,9 @@
    <widget class="QLineEdit" name="workingTimeLE">
     <property name="geometry">
      <rect>
-      <x>640</x>
+      <x>562</x>
       <y>340</y>
-      <width>113</width>
+      <width>191</width>
       <height>25</height>
      </rect>
     </property>
@@ -88,7 +88,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>390</x>
+      <x>440</x>
       <y>300</y>
       <width>101</width>
       <height>17</height>
@@ -101,7 +101,7 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>390</x>
+      <x>370</x>
       <y>340</y>
       <width>171</width>
       <height>20</height>
@@ -142,6 +142,45 @@
       <string>Server address</string>
      </property>
     </column>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>380</y>
+      <width>151</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Count of commands</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="commandLE">
+    <property name="geometry">
+     <rect>
+      <x>562</x>
+      <y>380</y>
+      <width>191</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="endSessionBtn">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>280</y>
+      <width>191</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>End current session</string>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

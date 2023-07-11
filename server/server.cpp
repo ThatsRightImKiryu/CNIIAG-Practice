@@ -19,12 +19,12 @@ QUdpSocket *udpSocket;
 
 Server::Server(QHostAddress address, int port)
 {
-        initSocket(address, port);
+    initSocket(address, port);
 }
 
 Server::Server()
 {
-    Server(ADDRESS, SERVER_PORT);
+    initSocket(ADDRESS, SERVER_PORT);
 }
 
 Server::~Server()
@@ -38,7 +38,7 @@ Server::~Server()
 
 void Server::initSocket(QHostAddress address, int port){
     udpSocket = new QUdpSocket(this);
-    udpSocket->bind(address, port);
+    qDebug()<<"CHECK BIND"<<udpSocket->bind(address, port);
     connect(udpSocket, &QUdpSocket::readyRead,
                 this, &Server::readPendingDatagrams);
 
@@ -51,7 +51,7 @@ void Server::readPendingDatagrams()
 
         cmdCount++;
 
-        QByteArray datagram;// = udpSocket->receiveDatagram();
+        QByteArray datagram; // = udpSocket->receiveDatagram();
         QHostAddress* address = new QHostAddress();
 
         datagram.resize(udpSocket->pendingDatagramSize());
@@ -59,6 +59,9 @@ void Server::readPendingDatagrams()
 
         ClientStruct readData = *reinterpret_cast<ClientStruct *>(datagram.data());
         std::cout<<"Read successfully "<<readData.command<<readData.id<<std::endl;
+        for(auto x: sessions){
+            qDebug()<<"SEssions"<<x;
+        }
 
         int checkSum = makeCheckSum(datagram);
 
@@ -66,13 +69,20 @@ void Server::readPendingDatagrams()
             addSession(readData.id);
             sendDatagram(checkSum, ASK, *address, CLIENT_PORT);
         }
-        qDebug()<<"CHeck init and stat"<<isInit(readData.id)<<!qstrcmp(readData.command, STAT);
         if(isInit(readData.id) && !qstrcmp(readData.command, STAT)){
             std::time_t currentTime = std::time(nullptr);
-            qDebug()<<"CHECK time"<<currentTime<< currentTime - startTime;
             sendDatagram(checkSum, STAT, currentTime, currentTime - startTime, *address, CLIENT_PORT);
         }
-//        else std::cout<<"You need to init"<<std::endl;
+
+        if(isInit(readData.id) && !qstrcmp(readData.command, END)){
+            for(uint64_t i = 0; i < sessions.size(); i++){
+                if(sessions[i] == readData.id){
+                    sessions.erase(sessions.begin()+i);
+                    qDebug()<<"Session is destroyed"<<readData.id;
+                    return;
+                }
+            }
+        }
 
     }
 
@@ -98,6 +108,9 @@ void Server::sendDatagram(int checkSum, char command[],  std::time_t currentTime
 
     char *time = reinterpret_cast<char*>(&currentTime);
     datagram.append(time, sizeof(currentTime));
+
+    char *cmdBytes = reinterpret_cast<char*>(&cmdCount);
+    datagram.append(cmdBytes, sizeof(cmdCount));
 
     time = reinterpret_cast<char*>(&fullTime);
     datagram.append(time, sizeof(fullTime));

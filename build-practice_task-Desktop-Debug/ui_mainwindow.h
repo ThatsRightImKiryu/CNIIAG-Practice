@@ -34,6 +34,9 @@ public:
     QLabel *label;
     QLabel *label_2;
     QTableWidget *sessionTable;
+    QLabel *label_3;
+    QLineEdit *commandLE;
+    QPushButton *endSessionBtn;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -45,13 +48,13 @@ public:
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         pushButton = new QPushButton(centralwidget);
         pushButton->setObjectName(QString::fromUtf8("pushButton"));
-        pushButton->setGeometry(QRect(560, 160, 141, 25));
+        pushButton->setGeometry(QRect(560, 160, 191, 25));
         lineEdit = new QLineEdit(centralwidget);
         lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
-        lineEdit->setGeometry(QRect(390, 160, 121, 25));
+        lineEdit->setGeometry(QRect(390, 160, 151, 25));
         statBtn = new QPushButton(centralwidget);
         statBtn->setObjectName(QString::fromUtf8("statBtn"));
-        statBtn->setGeometry(QRect(560, 220, 89, 25));
+        statBtn->setGeometry(QRect(560, 220, 191, 25));
         currentTimeLE = new QLineEdit(centralwidget);
         currentTimeLE->setObjectName(QString::fromUtf8("currentTimeLE"));
         currentTimeLE->setEnabled(true);
@@ -59,14 +62,14 @@ public:
         currentTimeLE->setReadOnly(true);
         workingTimeLE = new QLineEdit(centralwidget);
         workingTimeLE->setObjectName(QString::fromUtf8("workingTimeLE"));
-        workingTimeLE->setGeometry(QRect(640, 340, 113, 25));
+        workingTimeLE->setGeometry(QRect(562, 340, 191, 25));
         workingTimeLE->setReadOnly(true);
         label = new QLabel(centralwidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(390, 300, 101, 17));
+        label->setGeometry(QRect(440, 300, 101, 17));
         label_2 = new QLabel(centralwidget);
         label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setGeometry(QRect(390, 340, 171, 20));
+        label_2->setGeometry(QRect(370, 340, 171, 20));
         sessionTable = new QTableWidget(centralwidget);
         if (sessionTable->columnCount() < 2)
             sessionTable->setColumnCount(2);
@@ -79,6 +82,16 @@ public:
         sessionTable->setMinimumSize(QSize(351, 192));
         sessionTable->viewport()->setProperty("cursor", QVariant(QCursor(Qt::PointingHandCursor)));
         sessionTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        label_3 = new QLabel(centralwidget);
+        label_3->setObjectName(QString::fromUtf8("label_3"));
+        label_3->setGeometry(QRect(390, 380, 151, 20));
+        commandLE = new QLineEdit(centralwidget);
+        commandLE->setObjectName(QString::fromUtf8("commandLE"));
+        commandLE->setGeometry(QRect(562, 380, 191, 25));
+        commandLE->setReadOnly(true);
+        endSessionBtn = new QPushButton(centralwidget);
+        endSessionBtn->setObjectName(QString::fromUtf8("endSessionBtn"));
+        endSessionBtn->setGeometry(QRect(30, 280, 191, 25));
         MainWindow->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
@@ -102,6 +115,8 @@ public:
         ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "Session id", nullptr));
         QTableWidgetItem *___qtablewidgetitem1 = sessionTable->horizontalHeaderItem(1);
         ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Server address", nullptr));
+        label_3->setText(QCoreApplication::translate("MainWindow", "Count of commands", nullptr));
+        endSessionBtn->setText(QCoreApplication::translate("MainWindow", "End current session", nullptr));
     } // retranslateUi
 
 };

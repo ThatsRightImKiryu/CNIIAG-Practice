@@ -3,21 +3,27 @@
 #include <string.h>
 #include <QCryptographicHash>
 #include <Clientsettings.h>
+
 typedef struct {
     char command[CMD_SIZE];
     int checkSum;
 } ServerStruct;
 
+#pragma pack(push, 1)
+
 typedef struct {
     char command[CMD_SIZE];
     int checkSum;
     time_t currentTime;
+    uint16_t cmdCount;
     uint64_t fullTime;
 } StatStruct;
 
+#pragma pack(pop)
+
+
 short session_id;
 QUdpSocket *udpSocket;
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -32,6 +38,15 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    for(auto a: addresses)
+    {
+        QStringList slist = a.split(":");
+        QHostAddress address = QHostAddress(slist.value(0));
+        int port = slist.value(1).toInt();
+
+        removeAddress(address, port);
+        sendDatagram(END, clientId, address, port);
+    }
     udpSocket->close();
     delete udpSocket;
     delete ui;
@@ -57,6 +72,18 @@ void MainWindow::on_statBtn_clicked()
     int port = slist.value(1).toInt();
 
     sendDatagram(STAT, clientId, address, port);
+}
+
+void MainWindow::on_endSessionBtn_clicked()
+{
+    QString LEText = ui->lineEdit->text();
+    QStringList slist = LEText.split(":");
+
+    QHostAddress address = QHostAddress(slist.value(0));
+    int port = slist.value(1).toInt();
+    removeAddress(address, port);
+    fillTable();
+    sendDatagram(END, clientId, address, port);
 }
 
 
@@ -86,7 +113,7 @@ void MainWindow::readPendingDatagrams()
             qDebug()<<"ASK package";
             if(readData.checkSum==checkSum && !isInit(address, port)){
                 addAddress(address, port);
-                fillTable(addresses.back());
+                fillTable();
                 qDebug()<<"Package got successfully";
             }
             else qDebug()<<"Package sending FAILED";
@@ -96,7 +123,7 @@ void MainWindow::readPendingDatagrams()
             StatStruct readData = *reinterpret_cast<StatStruct *>(datagram.data());
             ui->currentTimeLE->setText(std::asctime(std::localtime(&readData.currentTime)));
             ui->workingTimeLE->setText(QString::number(readData.fullTime));
-
+            ui->commandLE->setText(QString::number(readData.cmdCount));
             qDebug()<<"STAT package"<<readData.currentTime<<readData.fullTime<<datagram.data();
         }
     }
@@ -119,6 +146,7 @@ void MainWindow::sendDatagram(char command[], uint16_t id, QHostAddress address,
 
 }
 
+
 int MainWindow::makeCheckSum(QByteArray datagram){
     datagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(datagram.data());
@@ -129,6 +157,17 @@ void MainWindow::addAddress(QHostAddress* address, uint16_t* port){
 
     if(!isInit(fullAddress))
         addresses.push_back(fullAddress);
+}
+
+void MainWindow::removeAddress(QHostAddress address, uint16_t port){
+    QString fullAddress = address.toString() + ":" + QString::number(port);
+
+    for(uint64_t i = 0; i < addresses.size(); i++){
+        if(fullAddress == addresses[i]){
+            addresses.erase(addresses.begin()+i);
+            return;
+        }
+    }
 }
 
 bool MainWindow::isInit(QString address){
@@ -151,10 +190,15 @@ bool MainWindow::isInit(QHostAddress* address, uint16_t* port){
     return false;
 }
 
-void MainWindow::fillTable(QString address){
+void MainWindow::fillTable(){
     QTableWidget *table = ui->sessionTable;
-    int rowCount = table->rowCount();
-    table->insertRow(rowCount);
-    ui->sessionTable->setItem(rowCount, 0, new QTableWidgetItem(QString::number(clientId)));
-    ui->sessionTable->setItem(rowCount, 1, new QTableWidgetItem(address));
+    table->clear(); table->setRowCount(0);
+    for(auto address: addresses)
+    {
+        int rowCount = table->rowCount();
+        table->insertRow(rowCount);
+        ui->sessionTable->setItem(rowCount, 0, new QTableWidgetItem(QString::number(clientId)));
+        ui->sessionTable->setItem(rowCount, 1, new QTableWidgetItem(address));
+    }
 }
+

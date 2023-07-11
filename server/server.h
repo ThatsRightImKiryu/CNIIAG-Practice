@@ -4,16 +4,17 @@
 #include <QObject>
 #include <QHostAddress>
 #include <vector>
+
 class Server: public QObject
 {
     Q_OBJECT
 
 public:
     std::vector<int> sessions;
-    int cmdCount = 0;
+    uint16_t cmdCount = 0;
     std::time_t startTime = std::time(nullptr);
-    Server();
     Server(QHostAddress address, int port);
+    Server();
     ~Server();
 
 private:
