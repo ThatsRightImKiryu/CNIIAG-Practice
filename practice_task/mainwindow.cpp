@@ -11,7 +11,7 @@ typedef struct {
 typedef struct {
     char command[CMD_SIZE];
     int checkSum;
-    uint64_t currentTime;
+    time_t currentTime;
     uint64_t fullTime;
 } StatStruct;
 
@@ -91,6 +91,8 @@ void MainWindow::readPendingDatagrams()
 
         if(!strcmp(readData.command, STAT)){
             StatStruct readData = *reinterpret_cast<StatStruct *>(datagram.data());
+            ui->currentTimeLE->setText(std::asctime(std::localtime(&readData.currentTime)));
+            ui->workingTimeLE->setText(QString::number(readData.fullTime));
 
             qDebug()<<"STAT package"<<readData.currentTime<<readData.fullTime<<datagram.data();
         }
