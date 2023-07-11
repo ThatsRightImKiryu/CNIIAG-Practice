@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>200</y>
+      <x>560</x>
+      <y>160</y>
       <width>141</width>
       <height>25</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>200</y>
+      <x>390</x>
+      <y>160</y>
       <width>121</width>
       <height>25</height>
      </rect>
@@ -46,8 +46,8 @@
    <widget class="QPushButton" name="statBtn">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>260</y>
+      <x>560</x>
+      <y>220</y>
       <width>89</width>
       <height>25</height>
      </rect>
@@ -62,9 +62,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>340</y>
-      <width>311</width>
+      <x>560</x>
+      <y>300</y>
+      <width>191</width>
       <height>25</height>
      </rect>
     </property>
@@ -75,8 +75,8 @@
    <widget class="QLineEdit" name="workingTimeLE">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>380</y>
+      <x>640</x>
+      <y>340</y>
       <width>113</width>
       <height>25</height>
      </rect>
@@ -88,8 +88,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>340</y>
+      <x>390</x>
+      <y>300</y>
       <width>101</width>
       <height>17</height>
      </rect>
@@ -101,26 +101,48 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>380</y>
-      <width>151</width>
+      <x>390</x>
+      <y>340</y>
+      <width>171</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Seconds left working</string>
+     <string>Seconds passed working</string>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>22</height>
-    </rect>
-   </property>
+   <widget class="QTableWidget" name="sessionTable">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>60</y>
+      <width>351</width>
+      <height>192</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>351</width>
+      <height>192</height>
+     </size>
+    </property>
+    <property name="cursor" stdset="0">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::NoEditTriggers</set>
+    </property>
+    <column>
+     <property name="text">
+      <string>Session id</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Server address</string>
+     </property>
+    </column>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

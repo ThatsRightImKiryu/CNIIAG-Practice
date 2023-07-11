@@ -7,7 +7,6 @@
 #include "iostream"
 #include "string"
 
-#include "session.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -20,6 +19,8 @@ class MainWindow : public QMainWindow
 public:
     uint16_t clientId;
     int checkSum = 0;
+    int tableSize = 0;
+    std::vector<QString> addresses;
     MainWindow(QWidget *parent=nullptr);
     ~MainWindow();
 
@@ -35,5 +36,9 @@ private:
     void readPendingDatagrams();
     void sendDatagram(char command[], uint16_t id,QHostAddress address, int port);
     int makeCheckSum(QByteArray datagram);
+    void addAddress(QHostAddress* address, uint16_t* port);
+    bool isInit(QString address);
+    bool isInit(QHostAddress* address, uint16_t* port);
+    void fillTable(QString address);
 };
 #endif // MAINWINDOW_H

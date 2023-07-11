@@ -13,6 +13,9 @@ char ASK[4] ="ask";
 char INIT[4] ="ini";
 char STAT[4] ="sta";
 
+//SIZES
 const short CMD_SIZE = 4;
+const short PORT_SIZE = 5;
+const short ADDRESS_SIZE = 17 + PORT_SIZE; //255.255.255.255:65535 + '\0' == 22 symbols
 
 #endif // SERVERSETTINGS_H

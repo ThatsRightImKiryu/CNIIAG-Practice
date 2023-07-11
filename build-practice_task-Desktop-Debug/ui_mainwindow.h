@@ -11,12 +11,13 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
+#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -32,7 +33,7 @@ public:
     QLineEdit *workingTimeLE;
     QLabel *label;
     QLabel *label_2;
-    QMenuBar *menubar;
+    QTableWidget *sessionTable;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -44,33 +45,41 @@ public:
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         pushButton = new QPushButton(centralwidget);
         pushButton->setObjectName(QString::fromUtf8("pushButton"));
-        pushButton->setGeometry(QRect(390, 200, 141, 25));
+        pushButton->setGeometry(QRect(560, 160, 141, 25));
         lineEdit = new QLineEdit(centralwidget);
         lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
-        lineEdit->setGeometry(QRect(230, 200, 121, 25));
+        lineEdit->setGeometry(QRect(390, 160, 121, 25));
         statBtn = new QPushButton(centralwidget);
         statBtn->setObjectName(QString::fromUtf8("statBtn"));
-        statBtn->setGeometry(QRect(400, 260, 89, 25));
+        statBtn->setGeometry(QRect(560, 220, 89, 25));
         currentTimeLE = new QLineEdit(centralwidget);
         currentTimeLE->setObjectName(QString::fromUtf8("currentTimeLE"));
         currentTimeLE->setEnabled(true);
-        currentTimeLE->setGeometry(QRect(380, 340, 311, 25));
+        currentTimeLE->setGeometry(QRect(560, 300, 191, 25));
         currentTimeLE->setReadOnly(true);
         workingTimeLE = new QLineEdit(centralwidget);
         workingTimeLE->setObjectName(QString::fromUtf8("workingTimeLE"));
-        workingTimeLE->setGeometry(QRect(380, 380, 113, 25));
+        workingTimeLE->setGeometry(QRect(640, 340, 113, 25));
         workingTimeLE->setReadOnly(true);
         label = new QLabel(centralwidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(210, 340, 101, 17));
+        label->setGeometry(QRect(390, 300, 101, 17));
         label_2 = new QLabel(centralwidget);
         label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setGeometry(QRect(210, 380, 151, 20));
+        label_2->setGeometry(QRect(390, 340, 171, 20));
+        sessionTable = new QTableWidget(centralwidget);
+        if (sessionTable->columnCount() < 2)
+            sessionTable->setColumnCount(2);
+        QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
+        sessionTable->setHorizontalHeaderItem(0, __qtablewidgetitem);
+        QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
+        sessionTable->setHorizontalHeaderItem(1, __qtablewidgetitem1);
+        sessionTable->setObjectName(QString::fromUtf8("sessionTable"));
+        sessionTable->setGeometry(QRect(20, 60, 351, 192));
+        sessionTable->setMinimumSize(QSize(351, 192));
+        sessionTable->viewport()->setProperty("cursor", QVariant(QCursor(Qt::PointingHandCursor)));
+        sessionTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
         MainWindow->setCentralWidget(centralwidget);
-        menubar = new QMenuBar(MainWindow);
-        menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 800, 22));
-        MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
         MainWindow->setStatusBar(statusbar);
@@ -88,7 +97,11 @@ public:
         lineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "init/status", nullptr));
         statBtn->setText(QCoreApplication::translate("MainWindow", "Status", nullptr));
         label->setText(QCoreApplication::translate("MainWindow", "Current Time", nullptr));
-        label_2->setText(QCoreApplication::translate("MainWindow", "Seconds left working", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "Seconds passed working", nullptr));
+        QTableWidgetItem *___qtablewidgetitem = sessionTable->horizontalHeaderItem(0);
+        ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "Session id", nullptr));
+        QTableWidgetItem *___qtablewidgetitem1 = sessionTable->horizontalHeaderItem(1);
+        ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Server address", nullptr));
     } // retranslateUi
 
 };

@@ -53,11 +53,9 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = ../practice_task/main.cpp \
-		../practice_task/mainwindow.cpp \
-		../practice_task/session.cpp moc_mainwindow.cpp
+		../practice_task/mainwindow.cpp moc_mainwindow.cpp
 OBJECTS       = main.o \
 		mainwindow.o \
-		session.o \
 		moc_mainwindow.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -138,10 +136,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		../practice_task/practice_task.pro ../practice_task/mainwindow.h \
-		../practice_task/Clientsettings.h \
-		../practice_task/session.h ../practice_task/main.cpp \
-		../practice_task/mainwindow.cpp \
-		../practice_task/session.cpp
+		../practice_task/Clientsettings.h ../practice_task/main.cpp \
+		../practice_task/mainwindow.cpp
 QMAKE_TARGET  = practice_task
 DESTDIR       = 
 TARGET        = practice_task
@@ -327,8 +323,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../practice_task/mainwindow.h ../practice_task/Clientsettings.h ../practice_task/session.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../practice_task/main.cpp ../practice_task/mainwindow.cpp ../practice_task/session.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../practice_task/mainwindow.h ../practice_task/Clientsettings.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../practice_task/main.cpp ../practice_task/mainwindow.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../practice_task/mainwindow.ui $(DISTDIR)/
 
 
@@ -365,7 +361,6 @@ compiler_moc_header_make_all: moc_mainwindow.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_mainwindow.cpp
 moc_mainwindow.cpp: ../practice_task/mainwindow.h \
-		../practice_task/session.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/kiryu/projects/qt/build-practice_task-Desktop-Debug/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/kiryu/projects/qt/practice_task -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../practice_task/mainwindow.h -o moc_mainwindow.cpp
@@ -391,18 +386,13 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 
 ####### Compile
 
-main.o: ../practice_task/main.cpp ../practice_task/mainwindow.h \
-		../practice_task/session.h
+main.o: ../practice_task/main.cpp ../practice_task/mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../practice_task/main.cpp
 
 mainwindow.o: ../practice_task/mainwindow.cpp ../practice_task/mainwindow.h \
-		../practice_task/session.h \
 		ui_mainwindow.h \
 		../practice_task/Clientsettings.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../practice_task/mainwindow.cpp
-
-session.o: ../practice_task/session.cpp ../practice_task/session.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o session.o ../practice_task/session.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp

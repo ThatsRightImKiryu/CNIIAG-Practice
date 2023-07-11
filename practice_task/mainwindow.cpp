@@ -75,15 +75,18 @@ void MainWindow::readPendingDatagrams()
     while (udpSocket->hasPendingDatagrams()) {
         QByteArray datagram;// = udpSocket->receiveDatagram();
         QHostAddress* address = new QHostAddress();
+        uint16_t* port = new uint16_t;
 
         datagram.resize(udpSocket->pendingDatagramSize());
-        udpSocket->readDatagram(datagram.data(), datagram.size(), address);
+        udpSocket->readDatagram(datagram.data(), datagram.size(), address, port);
 
         ServerStruct readData = *reinterpret_cast<ServerStruct *>(datagram.data());
         std::cout<<"Read successfully "<<readData.command<<std::endl;
         if(!strcmp(readData.command, ASK)){
             qDebug()<<"ASK package";
-            if(readData.checkSum==checkSum){
+            if(readData.checkSum==checkSum && !isInit(address, port)){
+                addAddress(address, port);
+                fillTable(addresses.back());
                 qDebug()<<"Package got successfully";
             }
             else qDebug()<<"Package sending FAILED";
@@ -121,4 +124,37 @@ int MainWindow::makeCheckSum(QByteArray datagram){
     return *reinterpret_cast<int*>(datagram.data());
 }
 
+void MainWindow::addAddress(QHostAddress* address, uint16_t* port){
+    QString fullAddress = address->toString() + ":" + QString::number(*port);
 
+    if(!isInit(fullAddress))
+        addresses.push_back(fullAddress);
+}
+
+bool MainWindow::isInit(QString address){
+
+    for(auto x: addresses){
+        if(address == x){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool MainWindow::isInit(QHostAddress* address, uint16_t* port){
+    QString fullAddress = address->toString() + ":" + QString::number(*port);
+    for(auto x: addresses){
+        if(fullAddress == x){
+            return true;
+        }
+    }
+    return false;
+}
+
+void MainWindow::fillTable(QString address){
+    QTableWidget *table = ui->sessionTable;
+    int rowCount = table->rowCount();
+    table->insertRow(rowCount);
+    ui->sessionTable->setItem(rowCount, 0, new QTableWidgetItem(QString::number(clientId)));
+    ui->sessionTable->setItem(rowCount, 1, new QTableWidgetItem(address));
+}
