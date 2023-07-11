@@ -86,6 +86,12 @@ void MainWindow::on_endSessionBtn_clicked()
     sendDatagram(END, clientId, address, port);
 }
 
+void MainWindow::on_sessionTable_cellDoubleClicked(int row)
+{
+    QString address = ui->sessionTable->item(row, 1)->text();
+    ui->lineEdit->setText(address);
+}
+
 
 //-----------Socket Methods-----------//
 
@@ -109,6 +115,7 @@ void MainWindow::readPendingDatagrams()
 
         ServerStruct readData = *reinterpret_cast<ServerStruct *>(datagram.data());
         std::cout<<"Read successfully "<<readData.command<<std::endl;
+
         if(!strcmp(readData.command, ASK)){
             qDebug()<<"ASK package";
             if(readData.checkSum==checkSum && !isInit(address, port)){
@@ -193,6 +200,8 @@ bool MainWindow::isInit(QHostAddress* address, uint16_t* port){
 void MainWindow::fillTable(){
     QTableWidget *table = ui->sessionTable;
     table->clear(); table->setRowCount(0);
+    QStringList headers = {"Session id","Server address"};
+    table->setHorizontalHeaderLabels(headers);
     for(auto address: addresses)
     {
         int rowCount = table->rowCount();
@@ -201,4 +210,5 @@ void MainWindow::fillTable(){
         ui->sessionTable->setItem(rowCount, 1, new QTableWidgetItem(address));
     }
 }
+
 

@@ -4,7 +4,7 @@
 #include <QHostAddress>
 
 //NETWORK SETTINGS
-int SERVER_PORT = 4335;
+int SERVER_PORT = 4337;
 int CLIENT_PORT = 4336;
 QHostAddress ADDRESS = QHostAddress::LocalHost;
 

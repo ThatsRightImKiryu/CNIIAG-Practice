@@ -31,6 +31,8 @@ private slots:
 
     void on_endSessionBtn_clicked();
 
+    void on_sessionTable_cellDoubleClicked(int row);
+
 private:
     Ui::MainWindow *ui;
 
