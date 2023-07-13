@@ -38,13 +38,14 @@ private:
 
     void initSocket(QHostAddress address, int port);
     void readPendingDatagrams();
-    void sendDatagram(char command[], uint16_t id,QHostAddress address, int port);
-    int makeCheckSum(QByteArray datagram);
-    void addAddress(QHostAddress* address, uint16_t* port);
-    void removeAddress(QHostAddress address, uint16_t port);
+    void sendDatagram(const char command[], const uint16_t id, const QHostAddress address, const int port);
+    int makeCheckSum(QByteArray &datagram);
+    void addAddress(QHostAddress address, int port);
+    void removeAddress(QHostAddress address, int port);
 
     bool isInit(QString address);
-    bool isInit(QHostAddress* address, uint16_t* port);
+    bool isInit(QHostAddress address, int port);
     void fillTable();
+    void byteToToggles(uint8_t byteToggles);
 };
 #endif // MAINWINDOW_H

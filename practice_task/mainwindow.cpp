@@ -5,18 +5,19 @@
 #include <Clientsettings.h>
 
 typedef struct {
-    char command[CMD_SIZE];
     int checkSum;
+    char command[];
 } ServerStruct;
 
 #pragma pack(push, 1)
 
 typedef struct {
-    char command[CMD_SIZE];
     int checkSum;
     time_t currentTime;
     uint16_t cmdCount;
     uint64_t fullTime;
+    uint8_t byteToggles;
+    char command[];
 } StatStruct;
 
 #pragma pack(pop)
@@ -33,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     srand(time(nullptr));
     clientId = rand()%65536;
     qInfo()<<"Client was init with id="<<clientId;
-    initSocket(ADDRESS, CLIENT_PORT);
+    initSocket(networkSettings::ADDRESS, networkSettings::CLIENT_PORT);
 }
 
 MainWindow::~MainWindow()
@@ -45,12 +46,14 @@ MainWindow::~MainWindow()
         int port = slist.value(1).toInt();
 
         removeAddress(address, port);
-        sendDatagram(END, clientId, address, port);
+        sendDatagram(cmdSettings::END, clientId, address, port);
     }
     udpSocket->close();
     delete udpSocket;
     delete ui;
 }
+//-----------Slot and "front" Methods-----------//
+
 
 void MainWindow::on_pushButton_clicked()
 {
@@ -60,7 +63,7 @@ void MainWindow::on_pushButton_clicked()
     QHostAddress address = QHostAddress(slist.value(0));
     int port = slist.value(1).toInt();
 
-    sendDatagram(INIT, clientId, address, port);
+    sendDatagram(cmdSettings::INIT, clientId, address, port);
 }
 
 void MainWindow::on_statBtn_clicked()
@@ -71,7 +74,7 @@ void MainWindow::on_statBtn_clicked()
     QHostAddress address = QHostAddress(slist.value(0));
     int port = slist.value(1).toInt();
 
-    sendDatagram(STAT, clientId, address, port);
+    sendDatagram(cmdSettings::STAT, clientId, address, port);
 }
 
 void MainWindow::on_endSessionBtn_clicked()
@@ -83,7 +86,7 @@ void MainWindow::on_endSessionBtn_clicked()
     int port = slist.value(1).toInt();
     removeAddress(address, port);
     fillTable();
-    sendDatagram(END, clientId, address, port);
+    sendDatagram(cmdSettings::END, clientId, address, port);
 }
 
 void MainWindow::on_sessionTable_cellDoubleClicked(int row)
@@ -91,6 +94,21 @@ void MainWindow::on_sessionTable_cellDoubleClicked(int row)
     QString address = ui->sessionTable->item(row, 1)->text();
     ui->lineEdit->setText(address);
 }
+
+void MainWindow::fillTable(){
+    QTableWidget *table = ui->sessionTable;
+    table->clear(); table->setRowCount(0);
+    QStringList headers = {"Session id","Server address"};
+    table->setHorizontalHeaderLabels(headers);
+    for(auto address: addresses)
+    {
+        int rowCount = table->rowCount();
+        table->insertRow(rowCount);
+        ui->sessionTable->setItem(rowCount, 0, new QTableWidgetItem(QString::number(clientId)));
+        ui->sessionTable->setItem(rowCount, 1, new QTableWidgetItem(address));
+    }
+}
+
 
 
 //-----------Socket Methods-----------//
@@ -106,67 +124,70 @@ void MainWindow::initSocket(QHostAddress address, int port){
 void MainWindow::readPendingDatagrams()
 {
     while (udpSocket->hasPendingDatagrams()) {
-        QByteArray datagram;// = udpSocket->receiveDatagram();
-        QHostAddress* address = new QHostAddress();
-        uint16_t* port = new uint16_t;
 
-        datagram.resize(udpSocket->pendingDatagramSize());
-        udpSocket->readDatagram(datagram.data(), datagram.size(), address, port);
+        QNetworkDatagram datagram = udpSocket->receiveDatagram();
+        QByteArray datagramByte = datagram.data();
 
-        ServerStruct readData = *reinterpret_cast<ServerStruct *>(datagram.data());
-        std::cout<<"Read successfully "<<readData.command<<std::endl;
+        ServerStruct *readData = reinterpret_cast<ServerStruct *>(datagramByte.data());
+        qDebug()<<"Read successfully "<<readData->command;
 
-        if(!strcmp(readData.command, ASK)){
+        if(!qstrcmp(readData->command, cmdSettings::ASK)){
             qDebug()<<"ASK package";
-            if(readData.checkSum==checkSum && !isInit(address, port)){
-                addAddress(address, port);
+            if(readData->checkSum==checkSum && !isInit(datagram.senderAddress(), datagram.senderPort())){
+                addAddress(datagram.senderAddress(), datagram.senderPort());
                 fillTable();
                 qDebug()<<"Package got successfully";
             }
             else qDebug()<<"Package sending FAILED";
         }
 
-        if(!strcmp(readData.command, STAT)){
-            StatStruct readData = *reinterpret_cast<StatStruct *>(datagram.data());
-            ui->currentTimeLE->setText(std::asctime(std::localtime(&readData.currentTime)));
-            ui->workingTimeLE->setText(QString::number(readData.fullTime));
-            ui->commandLE->setText(QString::number(readData.cmdCount));
-            qDebug()<<"STAT package"<<readData.currentTime<<readData.fullTime<<datagram.data();
+
+        StatStruct *readStatData = reinterpret_cast<StatStruct *>(datagramByte.data());
+        if(!qstrcmp(readStatData->command, cmdSettings::STAT)){
+            ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData->currentTime)));
+            ui->workingTimeLE->setText(QString::number(readStatData->fullTime));
+            ui->commandLE->setText(QString::number(readStatData->cmdCount));
+            byteToToggles(readStatData->byteToggles);
+            qDebug()<<"STAT package"<<readStatData->currentTime<<readStatData->byteToggles<<datagram.data();
         }
     }
 
 }
 
-void MainWindow::sendDatagram(char command[], uint16_t id, QHostAddress address, int port){
+void MainWindow::sendDatagram(const char command[], uint16_t id,
+                              const QHostAddress address, const int port){
 
     QByteArray datagram;
     char *idBytes = reinterpret_cast<char*>(&id);
 
     datagram.append(idBytes, sizeof(id));
-    datagram.append(command, CMD_SIZE);
+    datagram.append(command, strlen(command) + 1);
 
-    if(!strcmp(command, INIT) && !checkSum)
+    if(!strcmp(command, cmdSettings::INIT) && !checkSum)
         checkSum = makeCheckSum(datagram);
 
     udpSocket->writeDatagram(datagram, address, port);
-    std::cout<<"Sent successfully "<<command<<std::endl;
+    qDebug()<<"Sent successfully "<<command;
 
 }
 
+//-----------Computing Methods-----------//
 
-int MainWindow::makeCheckSum(QByteArray datagram){
-    datagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
-    return *reinterpret_cast<int*>(datagram.data());
+int MainWindow::makeCheckSum(QByteArray &datagram){
+    QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
+    return *reinterpret_cast<int*>(hashedDatagram.data());
 }
 
-void MainWindow::addAddress(QHostAddress* address, uint16_t* port){
-    QString fullAddress = address->toString() + ":" + QString::number(*port);
+//-----------Session Methods-----------//
+
+void MainWindow::addAddress(QHostAddress address, int port){
+    QString fullAddress = address.toString() + ":" + QString::number(port);
 
     if(!isInit(fullAddress))
         addresses.push_back(fullAddress);
 }
 
-void MainWindow::removeAddress(QHostAddress address, uint16_t port){
+void MainWindow::removeAddress(QHostAddress address, int port){
     QString fullAddress = address.toString() + ":" + QString::number(port);
 
     for(uint64_t i = 0; i < addresses.size(); i++){
@@ -187,8 +208,8 @@ bool MainWindow::isInit(QString address){
     return false;
 }
 
-bool MainWindow::isInit(QHostAddress* address, uint16_t* port){
-    QString fullAddress = address->toString() + ":" + QString::number(*port);
+bool MainWindow::isInit(QHostAddress address, int port){
+    QString fullAddress = address.toString() + ":" + QString::number(port);
     for(auto x: addresses){
         if(fullAddress == x){
             return true;
@@ -197,18 +218,13 @@ bool MainWindow::isInit(QHostAddress* address, uint16_t* port){
     return false;
 }
 
-void MainWindow::fillTable(){
-    QTableWidget *table = ui->sessionTable;
-    table->clear(); table->setRowCount(0);
-    QStringList headers = {"Session id","Server address"};
-    table->setHorizontalHeaderLabels(headers);
-    for(auto address: addresses)
-    {
-        int rowCount = table->rowCount();
-        table->insertRow(rowCount);
-        ui->sessionTable->setItem(rowCount, 0, new QTableWidgetItem(QString::number(clientId)));
-        ui->sessionTable->setItem(rowCount, 1, new QTableWidgetItem(address));
+
+void MainWindow::byteToToggles(uint8_t byteToggles)
+{
+
+    QList<QCheckBox *> toggles = ui->groupBox->findChildren<QCheckBox*>();
+    for(auto t: toggles){
+       if(byteToggles % 2) t->setChecked(true);
+       byteToggles /= 2;
     }
 }
-
-

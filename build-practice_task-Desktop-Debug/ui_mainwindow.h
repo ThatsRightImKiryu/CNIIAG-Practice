@@ -11,6 +11,8 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
@@ -37,13 +39,22 @@ public:
     QLabel *label_3;
     QLineEdit *commandLE;
     QPushButton *endSessionBtn;
+    QGroupBox *groupBox;
+    QCheckBox *checkBox;
+    QCheckBox *checkBox_2;
+    QCheckBox *checkBox_3;
+    QCheckBox *checkBox_4;
+    QCheckBox *checkBox_9;
+    QCheckBox *checkBox_10;
+    QCheckBox *checkBox_11;
+    QCheckBox *checkBox_12;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(800, 600);
+        MainWindow->resize(800, 675);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         pushButton = new QPushButton(centralwidget);
@@ -92,6 +103,33 @@ public:
         endSessionBtn = new QPushButton(centralwidget);
         endSessionBtn->setObjectName(QString::fromUtf8("endSessionBtn"));
         endSessionBtn->setGeometry(QRect(30, 280, 191, 25));
+        groupBox = new QGroupBox(centralwidget);
+        groupBox->setObjectName(QString::fromUtf8("groupBox"));
+        groupBox->setGeometry(QRect(150, 430, 461, 161));
+        checkBox = new QCheckBox(groupBox);
+        checkBox->setObjectName(QString::fromUtf8("checkBox"));
+        checkBox->setGeometry(QRect(40, 50, 92, 23));
+        checkBox_2 = new QCheckBox(groupBox);
+        checkBox_2->setObjectName(QString::fromUtf8("checkBox_2"));
+        checkBox_2->setGeometry(QRect(140, 50, 92, 23));
+        checkBox_3 = new QCheckBox(groupBox);
+        checkBox_3->setObjectName(QString::fromUtf8("checkBox_3"));
+        checkBox_3->setGeometry(QRect(240, 50, 92, 23));
+        checkBox_4 = new QCheckBox(groupBox);
+        checkBox_4->setObjectName(QString::fromUtf8("checkBox_4"));
+        checkBox_4->setGeometry(QRect(340, 50, 92, 23));
+        checkBox_9 = new QCheckBox(groupBox);
+        checkBox_9->setObjectName(QString::fromUtf8("checkBox_9"));
+        checkBox_9->setGeometry(QRect(40, 90, 92, 23));
+        checkBox_10 = new QCheckBox(groupBox);
+        checkBox_10->setObjectName(QString::fromUtf8("checkBox_10"));
+        checkBox_10->setGeometry(QRect(140, 90, 92, 23));
+        checkBox_11 = new QCheckBox(groupBox);
+        checkBox_11->setObjectName(QString::fromUtf8("checkBox_11"));
+        checkBox_11->setGeometry(QRect(230, 90, 92, 23));
+        checkBox_12 = new QCheckBox(groupBox);
+        checkBox_12->setObjectName(QString::fromUtf8("checkBox_12"));
+        checkBox_12->setGeometry(QRect(340, 90, 92, 23));
         MainWindow->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
@@ -117,6 +155,15 @@ public:
         ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Server address", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "Count of commands", nullptr));
         endSessionBtn->setText(QCoreApplication::translate("MainWindow", "End current session", nullptr));
+        groupBox->setTitle(QCoreApplication::translate("MainWindow", "Toggles", nullptr));
+        checkBox->setText(QCoreApplication::translate("MainWindow", "1", nullptr));
+        checkBox_2->setText(QCoreApplication::translate("MainWindow", "2", nullptr));
+        checkBox_3->setText(QCoreApplication::translate("MainWindow", "3", nullptr));
+        checkBox_4->setText(QCoreApplication::translate("MainWindow", "4", nullptr));
+        checkBox_9->setText(QCoreApplication::translate("MainWindow", "5", nullptr));
+        checkBox_10->setText(QCoreApplication::translate("MainWindow", "6", nullptr));
+        checkBox_11->setText(QCoreApplication::translate("MainWindow", "7", nullptr));
+        checkBox_12->setText(QCoreApplication::translate("MainWindow", "8", nullptr));
     } // retranslateUi
 
 };

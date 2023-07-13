@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 #include <memory>
-#include "../server/server.h"
+#include "../server1/server.h"
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetatype.h>
 #if !defined(Q_MOC_OUTPUT_REVISION)
@@ -134,7 +134,7 @@ void Server::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
 }
 
 QT_INIT_METAOBJECT const QMetaObject Server::staticMetaObject = { {
-    QMetaObject::SuperData::link<QObject::staticMetaObject>(),
+    QMetaObject::SuperData::link<QMainWindow::staticMetaObject>(),
     qt_meta_stringdata_Server.data,
     qt_meta_data_Server,
     qt_static_metacall,
@@ -153,12 +153,12 @@ void *Server::qt_metacast(const char *_clname)
     if (!_clname) return nullptr;
     if (!strcmp(_clname, qt_meta_stringdata_Server.stringdata0))
         return static_cast<void*>(this);
-    return QObject::qt_metacast(_clname);
+    return QMainWindow::qt_metacast(_clname);
 }
 
 int Server::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 {
-    _id = QObject::qt_metacall(_c, _id, _a);
+    _id = QMainWindow::qt_metacall(_c, _id, _a);
     return _id;
 }
 QT_WARNING_POP

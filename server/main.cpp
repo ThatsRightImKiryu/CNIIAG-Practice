@@ -1,12 +1,11 @@
-#include <QCoreApplication>
-#include <server.h>
+#include "server.h"
+
+#include <QApplication>
 
 int main(int argc, char *argv[])
-{    
-    QCoreApplication a(argc, argv);
-//QHostAddress::LocalHost, 4335
-
-    Server server;
-
+{
+    QApplication a(argc, argv);
+    Server w;
+    w.show();
     return a.exec();
 }
