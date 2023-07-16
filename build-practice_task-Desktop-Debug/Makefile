@@ -52,9 +52,11 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../practice_task/main.cpp \
+SOURCES       = ../practice_task/koi7.cpp \
+		../practice_task/main.cpp \
 		../practice_task/mainwindow.cpp moc_mainwindow.cpp
-OBJECTS       = main.o \
+OBJECTS       = koi7.o \
+		main.o \
 		mainwindow.o \
 		moc_mainwindow.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -135,8 +137,10 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../practice_task/practice_task.pro ../practice_task/mainwindow.h \
-		../practice_task/Clientsettings.h ../practice_task/main.cpp \
+		../practice_task/practice_task.pro ../practice_task/koi7.h \
+		../practice_task/mainwindow.h \
+		../practice_task/Clientsettings.h ../practice_task/koi7.cpp \
+		../practice_task/main.cpp \
 		../practice_task/mainwindow.cpp
 QMAKE_TARGET  = practice_task
 DESTDIR       = 
@@ -323,8 +327,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../practice_task/mainwindow.h ../practice_task/Clientsettings.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../practice_task/main.cpp ../practice_task/mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../practice_task/koi7.h ../practice_task/mainwindow.h ../practice_task/Clientsettings.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../practice_task/koi7.cpp ../practice_task/main.cpp ../practice_task/mainwindow.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../practice_task/mainwindow.ui $(DISTDIR)/
 
 
@@ -386,12 +390,16 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 
 ####### Compile
 
+koi7.o: ../practice_task/koi7.cpp ../practice_task/koi7.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o koi7.o ../practice_task/koi7.cpp
+
 main.o: ../practice_task/main.cpp ../practice_task/mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../practice_task/main.cpp
 
 mainwindow.o: ../practice_task/mainwindow.cpp ../practice_task/mainwindow.h \
 		ui_mainwindow.h \
-		../practice_task/Clientsettings.h
+		../practice_task/Clientsettings.h \
+		../practice_task/koi7.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../practice_task/mainwindow.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 

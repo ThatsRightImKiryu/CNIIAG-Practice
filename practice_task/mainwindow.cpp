@@ -3,7 +3,7 @@
 #include <string.h>
 #include <QCryptographicHash>
 #include <Clientsettings.h>
-
+#include <koi7.h>
 typedef struct {
     int checkSum;
     char command[];
@@ -149,7 +149,8 @@ void MainWindow::readPendingDatagrams()
             ui->workingTimeLE->setText(QString::number(readStatData->fullTime));
             ui->commandLE->setText(QString::number(readStatData->cmdCount));
             byteToToggles(readStatData->byteToggles);
-            qDebug()<<"STAT package"<<readStatData->errorList;
+            KOI7 utf8_str(readStatData->errorList);
+            qDebug()<<"STAT package"<<utf8_str.toUTF8();
         }
     }
 

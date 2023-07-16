@@ -34,6 +34,8 @@ Server::Server(QWidget *parent)
     , ui(new Ui::Server)
 {
     ui->setupUi(this);
+
+
     initSocket(networkSettings::ADDRESS,
                networkSettings::SERVER_PORT);
 }
@@ -70,9 +72,6 @@ void Server::readPendingDatagrams()
         cmdStruct  *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
 
         qDebug()<<"Read successfully "<<readData->command<<readData->id;
-        for(auto x: sessions){
-            qDebug()<<"SEssions"<<x;
-        }
 
         chooseCmd(datagram, readData);
 
@@ -233,15 +232,14 @@ void Server::makeErrorsPackage(char * charStr)
 {
     const char* errorWord = "ошибка";
     const char* okWord = "испр.#";
-    char resStr[110] = "";
-    for(int i = 0; i < 8; i++)
+    char resStr[100] = "";
+    for(int i = 1; i <= 8; i++)
     {
         if( i == toggleError )
             strncat(resStr, errorWord, strlen(errorWord));
         else
             strncat(resStr, okWord, strlen(errorWord));
     }
-
     KOI7 koi7_str(resStr);
-    qstrcpy(charStr, koi7_str.koi7_str);
+    qstrcpy(charStr, koi7_str.toKOI7());
 }
