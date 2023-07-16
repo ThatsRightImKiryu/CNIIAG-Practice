@@ -21,6 +21,7 @@ public:
     int checkSum = 0;
     int tableSize = 0;
     std::vector<QString> addresses;
+
     MainWindow(QWidget *parent=nullptr);
     ~MainWindow();
 
@@ -47,5 +48,6 @@ private:
     bool isInit(QHostAddress address, int port);
     void fillTable();
     void byteToToggles(uint8_t byteToggles);
+    void clearWindow();
 };
 #endif // MAINWINDOW_H

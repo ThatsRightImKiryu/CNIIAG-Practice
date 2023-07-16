@@ -17,6 +17,7 @@ typedef struct {
     uint16_t cmdCount;
     uint64_t fullTime;
     uint8_t byteToggles;
+    char errorList[49];
     char command[];
 } StatStruct;
 
@@ -52,7 +53,7 @@ MainWindow::~MainWindow()
     delete udpSocket;
     delete ui;
 }
-//-----------Slot and "front" Methods-----------//
+//---------------------------------Slot and "front" Methods---------------------------------//
 
 
 void MainWindow::on_pushButton_clicked()
@@ -73,7 +74,7 @@ void MainWindow::on_statBtn_clicked()
 
     QHostAddress address = QHostAddress(slist.value(0));
     int port = slist.value(1).toInt();
-
+    clearWindow();
     sendDatagram(cmdSettings::STAT, clientId, address, port);
 }
 
@@ -95,6 +96,7 @@ void MainWindow::on_sessionTable_cellDoubleClicked(int row)
     ui->lineEdit->setText(address);
 }
 
+
 void MainWindow::fillTable(){
     QTableWidget *table = ui->sessionTable;
     table->clear(); table->setRowCount(0);
@@ -110,8 +112,7 @@ void MainWindow::fillTable(){
 }
 
 
-
-//-----------Socket Methods-----------//
+//---------------------------------Socket Methods---------------------------------//
 
 void MainWindow::initSocket(QHostAddress address, int port){
     udpSocket = new QUdpSocket(this);
@@ -148,7 +149,7 @@ void MainWindow::readPendingDatagrams()
             ui->workingTimeLE->setText(QString::number(readStatData->fullTime));
             ui->commandLE->setText(QString::number(readStatData->cmdCount));
             byteToToggles(readStatData->byteToggles);
-            qDebug()<<"STAT package"<<readStatData->currentTime<<readStatData->byteToggles<<datagram.data();
+            qDebug()<<"STAT package"<<readStatData->errorList;
         }
     }
 
@@ -171,14 +172,41 @@ void MainWindow::sendDatagram(const char command[], uint16_t id,
 
 }
 
-//-----------Computing Methods-----------//
+//---------------------------------Computing Methods---------------------------------//
 
 int MainWindow::makeCheckSum(QByteArray &datagram){
     QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(hashedDatagram.data());
 }
 
-//-----------Session Methods-----------//
+void MainWindow::byteToToggles(uint8_t byteToggles)
+{
+
+    QList<QCheckBox *> toggles = ui->toggleGroupBox->findChildren<QCheckBox*>();
+    for(auto t: toggles){
+       if(byteToggles % 2) t->setChecked(true);
+       byteToggles /= 2;
+    }
+}
+
+void MainWindow::clearWindow()
+{
+    QList<QLineEdit*> gbLineEdits = ui->StatusGroupBox->findChildren<QLineEdit*>();
+    for(auto le: gbLineEdits)
+    {
+        le->clear();
+    }
+
+    QList<QCheckBox *> toggles = ui->toggleGroupBox->findChildren<QCheckBox*>();
+    for(auto t: toggles)
+    {
+        t->setChecked(false);
+    }
+
+
+}
+
+//---------------------------------Session Methods---------------------------------//
 
 void MainWindow::addAddress(QHostAddress address, int port){
     QString fullAddress = address.toString() + ":" + QString::number(port);
@@ -219,12 +247,5 @@ bool MainWindow::isInit(QHostAddress address, int port){
 }
 
 
-void MainWindow::byteToToggles(uint8_t byteToggles)
-{
 
-    QList<QCheckBox *> toggles = ui->groupBox->findChildren<QCheckBox*>();
-    for(auto t: toggles){
-       if(byteToggles % 2) t->setChecked(true);
-       byteToggles /= 2;
-    }
-}
+

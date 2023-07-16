@@ -72,8 +72,13 @@ public:
     uint16_t cmdCount = 0;
     std::time_t startTime = std::time(nullptr);
     char byteToggles = 0;
+    char toggleError = 0;
+
     Server(QWidget *parent = nullptr);
     ~Server();
+
+private slots:
+    void on_toggleErrorCheckBox_toggled(bool checked);
 
 private:
     Ui::Server *ui;
@@ -92,10 +97,11 @@ private:
                                    std::time_t startTime);
 
     void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
-    void operateInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum);
-    void operateStat(QNetworkDatagram &datagram, int checkSum);
-    void operateEnd(cmdStruct *readData);
+    void sendInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum);
+    void sendStat(QNetworkDatagram &datagram, int checkSum);
+    void sendEnd(cmdStruct *readData);
     char togglesToByte();
+    void makeErrorsPackage(char * charStr);
 };
 
 #endif // SERVER_H

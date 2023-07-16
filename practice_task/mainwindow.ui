@@ -56,61 +56,6 @@
      <string>Status</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="currentTimeLE">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>300</y>
-      <width>191</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="workingTimeLE">
-    <property name="geometry">
-     <rect>
-      <x>562</x>
-      <y>340</y>
-      <width>191</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>300</y>
-      <width>101</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Current Time</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>340</y>
-      <width>171</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Seconds passed working</string>
-    </property>
-   </widget>
    <widget class="QTableWidget" name="sessionTable">
     <property name="geometry">
      <rect>
@@ -143,32 +88,6 @@
      </property>
     </column>
    </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>390</x>
-      <y>380</y>
-      <width>151</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Count of commands</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="commandLE">
-    <property name="geometry">
-     <rect>
-      <x>562</x>
-      <y>380</y>
-      <width>191</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QPushButton" name="endSessionBtn">
     <property name="geometry">
      <rect>
@@ -182,11 +101,11 @@
      <string>End current session</string>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBox">
+   <widget class="QGroupBox" name="toggleGroupBox">
     <property name="geometry">
      <rect>
       <x>150</x>
-      <y>430</y>
+      <y>450</y>
       <width>461</width>
       <height>161</height>
      </rect>
@@ -296,6 +215,100 @@
      </property>
      <property name="text">
       <string>8</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="StatusGroupBox">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>250</y>
+      <width>401</width>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Status from server</string>
+    </property>
+    <widget class="QLineEdit" name="commandLE">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>150</y>
+       <width>191</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>150</y>
+       <width>151</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Count of commands</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="workingTimeLE">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>110</y>
+       <width>191</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>70</y>
+       <width>101</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Current Time</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="currentTimeLE">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>188</x>
+       <y>70</y>
+       <width>191</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>110</y>
+       <width>171</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Seconds passed working</string>
      </property>
     </widget>
    </widget>

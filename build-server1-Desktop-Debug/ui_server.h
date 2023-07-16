@@ -33,6 +33,7 @@ public:
     QCheckBox *checkBox_10;
     QCheckBox *checkBox_11;
     QCheckBox *checkBox_12;
+    QCheckBox *toggleErrorCheckBox;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -70,6 +71,9 @@ public:
         checkBox_12 = new QCheckBox(groupBox);
         checkBox_12->setObjectName(QString::fromUtf8("checkBox_12"));
         checkBox_12->setGeometry(QRect(340, 90, 92, 23));
+        toggleErrorCheckBox = new QCheckBox(centralwidget);
+        toggleErrorCheckBox->setObjectName(QString::fromUtf8("toggleErrorCheckBox"));
+        toggleErrorCheckBox->setGeometry(QRect(50, 460, 151, 23));
         Server->setCentralWidget(centralwidget);
         menubar = new QMenuBar(Server);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -96,6 +100,7 @@ public:
         checkBox_10->setText(QCoreApplication::translate("Server", "6", nullptr));
         checkBox_11->setText(QCoreApplication::translate("Server", "7", nullptr));
         checkBox_12->setText(QCoreApplication::translate("Server", "8", nullptr));
+        toggleErrorCheckBox->setText(QCoreApplication::translate("Server", "Make toggle error", nullptr));
     } // retranslateUi
 
 };

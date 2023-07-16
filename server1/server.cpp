@@ -3,9 +3,9 @@
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include "iostream"
+#include "string"
 #include <QCryptographicHash>
 #include <Serversettings.h>
-#include <koi7.h>
 
 
 typedef struct {
@@ -69,7 +69,7 @@ void Server::readPendingDatagrams()
 
         cmdStruct  *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
 
-        qDebug()<<"Read successfully "<<readData->command<<readData->id;
+        qDebug()<<"Read successfully "<<readData->command;
         for(auto x: sessions){
             qDebug()<<"SEssions"<<x;
         }
@@ -112,12 +112,6 @@ void Server::sendDatagram(int checkSum, const char command[],
     datagram.append(timeBytes, sizeof(fullTime));
 
     datagram.append(togglesToByte());
-
-    char errorsList[100] = "";
-
-    makeErrorsPackage(errorsList);
-
-    datagram.append(errorsList, 49);
 
     datagram.append(command, strlen(command) + 1);
 
@@ -168,29 +162,29 @@ void Server::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
     int checkSum = makeCheckSum(datagamBytes);
 
     if(!qstrcmp(readData->command,     cmdSettings::INIT)){
-        sendInit(datagram, readData, checkSum);
+        operateInit(datagram, readData, checkSum);
     }
 
     if(isInit(readData->id)){
         if(!qstrcmp(readData->command, cmdSettings::STAT)){
-            sendStat(datagram, checkSum);
+            operateStat(datagram, checkSum);
         }
 
         if(!qstrcmp(readData->command, cmdSettings::END)){
-            sendEnd(readData);
+            operateEnd(readData);
         }
     }
 
 }
 
-void Server::sendInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum)
+void Server::operateInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum)
 {
     addSession(readData->id);
     sendDatagram(checkSum, cmdSettings::ASK, datagram.senderAddress(),
                  networkSettings::CLIENT_PORT);
 }
 
-void Server::sendStat(QNetworkDatagram &datagram, int checkSum)
+void Server::operateStat(QNetworkDatagram &datagram, int checkSum)
 {
     std::time_t currentTime = std::time(nullptr);
     sendDatagram(checkSum, cmdSettings::STAT,
@@ -198,7 +192,7 @@ void Server::sendStat(QNetworkDatagram &datagram, int checkSum)
                  datagram.senderAddress(), networkSettings::CLIENT_PORT);
 }
 
-void Server::sendEnd(cmdStruct *readData)
+void Server::operateEnd(cmdStruct *readData)
 {
     for(uint64_t i = 0; i < sessions.size(); i++){
         if(sessions[i] == readData->id){
@@ -213,35 +207,8 @@ char Server::togglesToByte()
 {
     byteToggles = 0;
     QList<QCheckBox *> toggles = ui->groupBox->findChildren<QCheckBox*>();
-    for(int i = 0; i < toggles.size(); i++)
-    {
+    for(int i = 0; i < toggles.size(); i++){
         if(toggles[i]->isChecked()) byteToggles |= (1 << i);
-    }    
+    }
     return byteToggles;
-}
-
-void Server::on_toggleErrorCheckBox_toggled(bool checked)
-{
-    if(checked){
-        srand(time(nullptr));
-        toggleError = rand() % 8;
-    }
-    else toggleError = 0;
-}
-
-void Server::makeErrorsPackage(char * charStr)
-{
-    const char* errorWord = "ошибка";
-    const char* okWord = "испр.#";
-    char resStr[110] = "";
-    for(int i = 0; i < 8; i++)
-    {
-        if( i == toggleError )
-            strncat(resStr, errorWord, strlen(errorWord));
-        else
-            strncat(resStr, okWord, strlen(errorWord));
-    }
-
-    KOI7 koi7_str(resStr);
-    qstrcpy(charStr, koi7_str.koi7_str);
 }
