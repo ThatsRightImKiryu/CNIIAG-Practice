@@ -15,45 +15,22 @@ typedef struct {
     char command[];
 } cmdStruct;
 
+typedef struct {
+    int checkSum;
+    char command[];
+} ServerStruct;
 
+#pragma pack(push, 1)
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+typedef struct {
+    int checkSum;
+    time_t currentTime;
+    uint16_t cmdCount;
+    uint64_t fullTime;
+    char command[];
+} StatStruct;
 
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
-
-public:
-    uint16_t clientId;
-    int checkSum = 0;
-    int tableSize = 0;
-    std::vector<QString> addresses;
-
-//private slots:
-//    void on_pushButton_clicked();
-
-//    void on_statBtn_clicked();
-
-//    void on_endSessionBtn_clicked();
-
-//    void on_sessionTable_cellDoubleClicked(int row);
-
-private:
-    Ui::MainWindow *ui;
-
-    void initSocket(QHostAddress address, int port);
-    void readPendingDatagrams();
-    void sendDatagram(const char command[], const uint16_t id, const QHostAddress address, const int port);
-    int makeCheckSum(QByteArray &datagram);
-    void addAddress(QHostAddress address, int port);
-    void removeAddress(QHostAddress address, int port);
-
-    bool isInit(QString address);
-    bool isInit(QHostAddress address, int port);
-    void fillTable();
-};
+#pragma pack(pop)
 
 
 QT_BEGIN_NAMESPACE
@@ -65,24 +42,12 @@ class Server: public QMainWindow
 {
     Q_OBJECT
 
-
 public:
-
-    std::vector<int> sessions;
-    uint16_t cmdCount = 0;
-    std::time_t startTime = std::time(nullptr);
-    char byteToggles = 0;
-    char toggleError = 0;
-
     Server(QWidget *parent = nullptr);
     ~Server();
 
-private slots:
-    void on_toggleErrorCheckBox_toggled(bool checked);
 
-private:
-    Ui::Server *ui;
-
+public:
     void initSocket(QHostAddress address, int port);
     void readPendingDatagrams();
     void sendDatagram(int checkSum, const char command[],
@@ -90,18 +55,35 @@ private:
     void sendDatagram(int checkSum, const char command[],  std::time_t currentTime,
                       std::time_t fullTime, const QHostAddress address, const int port);
 
-    void addSession(uint16_t id);
-    int makeCheckSum(QByteArray &datagram);
-    bool isInit(int id);
-    inline std::time_t workingTime(std::time_t currentTime,
-                                   std::time_t startTime);
-
+public:
     void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
     void sendInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum);
     void sendStat(QNetworkDatagram &datagram, int checkSum);
-    void sendEnd(cmdStruct *readData);
+    void readEnd(cmdStruct *readData);
+
+public:
+    bool isInit(int id);
+    void addSession(uint16_t id);
+
+private:
     char togglesToByte();
+    int makeCheckSum(QByteArray &datagram);
     void makeErrorsPackage(char * charStr);
+    inline std::time_t workingTime(std::time_t currentTime,
+                                   std::time_t startTime);
+
+private:
+    Ui::Server *ui;
+
+private:
+    char byteToggles = 0;
+    std::time_t startTime = std::time(nullptr);
+
+private:
+    uint16_t cmdCount = 0;
+    QSet<int> sessions;
+
+
 };
 
 #endif // SERVER_H

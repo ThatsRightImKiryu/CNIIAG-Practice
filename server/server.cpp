@@ -5,26 +5,7 @@
 #include "iostream"
 #include <QCryptographicHash>
 #include <Serversettings.h>
-#include <koi7.h>
-
-
-typedef struct {
-    int checkSum;
-    char command[];
-} ServerStruct;
-
-#pragma pack(push, 1)
-
-typedef struct {
-    int checkSum;
-    time_t currentTime;
-    uint16_t cmdCount;
-    uint64_t fullTime;
-    char command[];
-} StatStruct;
-
-#pragma pack(pop)
-
+#include <charsetconv.h>
 
 short session_id;
 QUdpSocket *udpSocket;
@@ -121,7 +102,7 @@ void Server::sendDatagram(int checkSum, const char command[],
     datagram.append(command, strlen(command) + 1);
 
     udpSocket->writeDatagram(datagram, address, port);
-    qDebug()<<"Sent successfully "<<command;
+    qDebug()<<"Sent successfully "<<datagram.data();
 }
 
 //-----------Session Methods-----------//
@@ -132,18 +113,13 @@ void Server::addSession(uint16_t id){
     }
     else
     {
-        sessions.push_back(id);
+        sessions.insert(id);
         qDebug()<<"Session IS init successfully";
     }
 }
 
 bool Server::isInit(int id){
-    for(auto x: sessions){
-        if(x == id){
-            return true;
-        }
-    }
-    return false;
+    return sessions.contains(id);
 }
 
 //-----------Computing Methods-----------//
@@ -176,7 +152,7 @@ void Server::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
         }
 
         if(!qstrcmp(readData->command, cmdSettings::END)){
-            sendEnd(readData);
+            readEnd(readData);
         }
     }
 
@@ -197,15 +173,11 @@ void Server::sendStat(QNetworkDatagram &datagram, int checkSum)
                  datagram.senderAddress(), networkSettings::CLIENT_PORT);
 }
 
-void Server::sendEnd(cmdStruct *readData)
+void Server::readEnd(cmdStruct *readData)
 {
-    for(uint64_t i = 0; i < sessions.size(); i++){
-        if(sessions[i] == readData->id){
-            sessions.erase(sessions.begin()+i);
-            qDebug()<<"Session is destroyed"<<readData->id;
-            return;
-        }
-    }
+    sessions.remove(readData->id);
+    qDebug()<<"Session is destroyed"<<readData->id;
+    return;
 }
 
 char Server::togglesToByte()
@@ -219,27 +191,20 @@ char Server::togglesToByte()
     return byteToggles;
 }
 
-void Server::on_toggleErrorCheckBox_toggled(bool checked)
-{
-    if(checked){
-        srand(time(nullptr));
-        toggleError = rand() % 8;
-    }
-    else toggleError = 0;
-}
-
 void Server::makeErrorsPackage(char * charStr)
 {
+    QList<QCheckBox *> errToggles = ui->groupBox_err->findChildren<QCheckBox*>();
     const char* errorWord = "ошибка";
     const char* okWord = "испр.#";
-    char resStr[100] = "";
-    for(int i = 1; i <= 8; i++)
+    char *resStr = new char[100]{'\0'};
+    for(auto et: errToggles)
     {
-        if( i == toggleError )
+        if( et->isChecked() )
             strncat(resStr, errorWord, strlen(errorWord));
         else
             strncat(resStr, okWord, strlen(errorWord));
     }
-    KOI7 koi7_str(resStr);
-    qstrcpy(charStr, koi7_str.toKOI7());
+    charSetConv charSetConv_str(resStr);
+    qstrcpy(charStr, charSetConv_str.toKOI7());
+    if(!resStr) delete[] resStr;
 }

@@ -3,29 +3,19 @@
 #include <string.h>
 #include <QCryptographicHash>
 #include <Clientsettings.h>
-#include <koi7.h>
-typedef struct {
-    int checkSum;
-    char command[];
-} ServerStruct;
+#include <charsetconv.h>
 
-#pragma pack(push, 1)
+namespace labels
+{
+    const char *TOGGLE_ON = "ВКЛ.";
+    const char *TOGGLE_OFF = "ВЫКЛ.";
+    const char *TOGGLE_OK = "Исправно";
+    const char *TOGGLE_FAIL = "Не работает";
 
-typedef struct {
-    int checkSum;
-    time_t currentTime;
-    uint16_t cmdCount;
-    uint64_t fullTime;
-    uint8_t byteToggles;
-    char errorList[49];
-    char command[];
-} StatStruct;
-
-#pragma pack(pop)
-
-
+}
 short session_id;
 QUdpSocket *udpSocket;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -33,18 +23,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     srand(time(nullptr));
-    clientId = rand()%65536;
-    qInfo()<<"Client was init with id="<<clientId;
+    clientId = rand() % 65536;
+
     initSocket(networkSettings::ADDRESS, networkSettings::CLIENT_PORT);
 }
-
 MainWindow::~MainWindow()
 {
     for(auto a: addresses)
     {
-        QStringList slist = a.split(":");
-        QHostAddress address = QHostAddress(slist.value(0));
-        int port = slist.value(1).toInt();
+        QHostAddress address = getAddressFromQStr(a);
+        int port = getPortFromQStr(a);
 
         removeAddress(address, port);
         sendDatagram(cmdSettings::END, clientId, address, port);
@@ -59,35 +47,24 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     QString LEText = ui->lineEdit->text();
-    QStringList slist = LEText.split(":");
 
-    QHostAddress address = QHostAddress(slist.value(0));
-    int port = slist.value(1).toInt();
-
-    sendDatagram(cmdSettings::INIT, clientId, address, port);
+    sendDatagram(cmdSettings::INIT, clientId, getAddressFromQStr(LEText), getPortFromQStr(LEText));
 }
 
 void MainWindow::on_statBtn_clicked()
 {
     QString LEText = ui->lineEdit->text();
-    QStringList slist = LEText.split(":");
 
-    QHostAddress address = QHostAddress(slist.value(0));
-    int port = slist.value(1).toInt();
+    QHostAddress address = getAddressFromQStr(LEText);
+    int port = getPortFromQStr(LEText);
+
     clearWindow();
     sendDatagram(cmdSettings::STAT, clientId, address, port);
 }
 
 void MainWindow::on_endSessionBtn_clicked()
 {
-    QString LEText = ui->lineEdit->text();
-    QStringList slist = LEText.split(":");
-
-    QHostAddress address = QHostAddress(slist.value(0));
-    int port = slist.value(1).toInt();
-    removeAddress(address, port);
-    fillTable();
-    sendDatagram(cmdSettings::END, clientId, address, port);
+    sendEnd();
 }
 
 void MainWindow::on_sessionTable_cellDoubleClicked(int row)
@@ -99,9 +76,13 @@ void MainWindow::on_sessionTable_cellDoubleClicked(int row)
 
 void MainWindow::fillTable(){
     QTableWidget *table = ui->sessionTable;
+
+    //Set table to default
     table->clear(); table->setRowCount(0);
     QStringList headers = {"Session id","Server address"};
     table->setHorizontalHeaderLabels(headers);
+
+    //filling table
     for(auto address: addresses)
     {
         int rowCount = table->rowCount();
@@ -129,29 +110,10 @@ void MainWindow::readPendingDatagrams()
         QNetworkDatagram datagram = udpSocket->receiveDatagram();
         QByteArray datagramByte = datagram.data();
 
-        ServerStruct *readData = reinterpret_cast<ServerStruct *>(datagramByte.data());
+        cmdStruct *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
         qDebug()<<"Read successfully "<<readData->command;
 
-        if(!qstrcmp(readData->command, cmdSettings::ASK)){
-            qDebug()<<"ASK package";
-            if(readData->checkSum==checkSum && !isInit(datagram.senderAddress(), datagram.senderPort())){
-                addAddress(datagram.senderAddress(), datagram.senderPort());
-                fillTable();
-                qDebug()<<"Package got successfully";
-            }
-            else qDebug()<<"Package sending FAILED";
-        }
-
-
-        StatStruct *readStatData = reinterpret_cast<StatStruct *>(datagramByte.data());
-        if(!qstrcmp(readStatData->command, cmdSettings::STAT)){
-            ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData->currentTime)));
-            ui->workingTimeLE->setText(QString::number(readStatData->fullTime));
-            ui->commandLE->setText(QString::number(readStatData->cmdCount));
-            byteToToggles(readStatData->byteToggles);
-            KOI7 utf8_str(readStatData->errorList);
-            qDebug()<<"STAT package"<<utf8_str.toUTF8();
-        }
+        chooseCmd(datagram, readData);
     }
 
 }
@@ -182,12 +144,35 @@ int MainWindow::makeCheckSum(QByteArray &datagram){
 
 void MainWindow::byteToToggles(uint8_t byteToggles)
 {
-
-    QList<QCheckBox *> toggles = ui->toggleGroupBox->findChildren<QCheckBox*>();
-    for(auto t: toggles){
-       if(byteToggles % 2) t->setChecked(true);
+    QList<QLineEdit *> lineEdits = ui->groupBox_err->findChildren<QLineEdit*>();
+    for(auto le: lineEdits)
+    {
+       if(byteToggles % 2)
+           le->setText(labels::TOGGLE_ON);
+       else
+           le->setText(labels::TOGGLE_OFF);
        byteToggles /= 2;
     }
+}
+
+void MainWindow::setErrors(char errorList[])
+{
+
+    QList<QLineEdit *> errLineEdits = ui->groupBox_err->findChildren<QLineEdit*>();
+    char *error = new char[7]{'\0'};
+    for(int i = 0; i < errLineEdits.size(); i++)
+    {
+      strncpy(error, errorList+i*6, 6);
+      if(!qstrcmp(error, "испр.#"))
+      {
+          errLineEdits[i]->setText(labels::TOGGLE_OK);
+      }
+      if(!qstrcmp(error, "ошибка"))
+      {
+          errLineEdits[i]->setText(labels::TOGGLE_FAIL);
+      }
+    }
+    delete[] error;
 }
 
 void MainWindow::clearWindow()
@@ -198,13 +183,17 @@ void MainWindow::clearWindow()
         le->clear();
     }
 
-    QList<QCheckBox *> toggles = ui->toggleGroupBox->findChildren<QCheckBox*>();
+    QList<QLineEdit *> toggles = ui->groupBox_toggle->findChildren<QLineEdit*>();
     for(auto t: toggles)
     {
-        t->setChecked(false);
+        t->clear();
     }
 
-
+    QList<QLineEdit *> errToggles = ui->groupBox_err->findChildren<QLineEdit*>();
+    for(auto et: toggles)
+    {
+        et->clear();
+    }
 }
 
 //---------------------------------Session Methods---------------------------------//
@@ -213,40 +202,87 @@ void MainWindow::addAddress(QHostAddress address, int port){
     QString fullAddress = address.toString() + ":" + QString::number(port);
 
     if(!isInit(fullAddress))
-        addresses.push_back(fullAddress);
+        addresses.insert(fullAddress);
 }
 
 void MainWindow::removeAddress(QHostAddress address, int port){
     QString fullAddress = address.toString() + ":" + QString::number(port);
 
-    for(uint64_t i = 0; i < addresses.size(); i++){
-        if(fullAddress == addresses[i]){
-            addresses.erase(addresses.begin()+i);
-            return;
-        }
-    }
+    addresses.remove(fullAddress);
 }
 
 bool MainWindow::isInit(QString address){
-
-    for(auto x: addresses){
-        if(address == x){
-            return true;
-        }
-    }
-    return false;
+   return addresses.contains(address);
 }
 
 bool MainWindow::isInit(QHostAddress address, int port){
     QString fullAddress = address.toString() + ":" + QString::number(port);
-    for(auto x: addresses){
-        if(fullAddress == x){
-            return true;
-        }
+
+    return isInit(fullAddress);
+}
+
+void MainWindow::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
+{
+    ui->lineEdit_pkgSize->setText(QString::number(datagram.data().size()));
+
+    if(!qstrcmp(readData->command, cmdSettings::ASK))
+    {
+        readAsk(datagram, readData);
     }
-    return false;
+
+    StatStruct *readStatData = reinterpret_cast<StatStruct *>(datagram.data().data());
+    if(!qstrcmp(readStatData->command, cmdSettings::STAT))
+    {
+        readStat(readStatData);
+    }
+
+}
+
+void MainWindow::readStat(StatStruct *readStatData)
+{
+    ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData->currentTime)));
+    ui->workingTimeLE->setText(QString::number(readStatData->fullTime));
+    ui->commandLE->setText(QString::number(readStatData->cmdCount));
+    byteToToggles(readStatData->byteToggles);
+    charSetConv utf8_str(readStatData->errorList);
+//    setErrors(utf8_str.toUTF8());
+    qDebug()<<"STAT package"<<utf8_str.toUTF8();
 }
 
 
+void MainWindow::readAsk(QNetworkDatagram &datagram, cmdStruct *readData)
+{
+    qDebug()<<"ASK package";
+    if(readData->checkSum==checkSum && //crc==got_from_package and init
+           !isInit(datagram.senderAddress(), datagram.senderPort()))
+    {
+        addAddress(datagram.senderAddress(), datagram.senderPort());
+        fillTable();
+        qDebug()<<"Package got successfully";
+    }
+    else qDebug()<<"Package sending FAILED";
+}
 
+void MainWindow::sendEnd()
+{
+    QString LEText = ui->lineEdit->text();
 
+    QHostAddress address = getAddressFromQStr(LEText);
+    int port = getPortFromQStr(LEText);
+
+    removeAddress(address, port);
+    fillTable();
+    sendDatagram(cmdSettings::END, clientId, address, port);
+}
+
+QHostAddress MainWindow::getAddressFromQStr(QString fullAddress)
+{
+    QStringList slist = fullAddress.split(":");
+    return QHostAddress(slist.value(0));
+}
+
+int MainWindow::getPortFromQStr(QString fullAddress)
+{
+    QStringList slist = fullAddress.split(":");
+    return slist.value(1).toInt();
+}

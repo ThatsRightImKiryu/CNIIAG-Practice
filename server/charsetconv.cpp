@@ -1,4 +1,4 @@
-#include "koi7.h"
+#include "charsetconv.h"
 #include <QDebug>
 #include <iconv.h>
 #include <codecvt>
@@ -9,13 +9,13 @@ namespace charsets{
     const char* UTF8_CHARSET= "utf-8";
 }
 
-KOI7::KOI7(char * charStr)
+charSetConv::charSetConv(char * charStr)
 {
     this->charStr = new char[100];
     qstrcpy(this->charStr, charStr);
 }
 
-char *KOI7::charSetConverter(char *charStr, char *resStr, const char* toCharSet, const char* fromCharSet)
+char *charSetConv::charSetConverter(char *charStr, char *resStr, const char* toCharSet, const char* fromCharSet)
 {
     iconv_t cd;
     size_t inleft = strlen(charStr) + 1;
@@ -40,7 +40,7 @@ char *KOI7::charSetConverter(char *charStr, char *resStr, const char* toCharSet,
     return resStr;
 };
 
-char* KOI7::toKOI7()
+char* charSetConv::toKOI7()
 {
     char buf[49] = "";
     charSetConverter(charStr, buf, charsets::KOI7_CHARSET, charsets::UTF8_CHARSET);
@@ -48,7 +48,7 @@ char* KOI7::toKOI7()
     return charStr;
 }
 
-char* KOI7::toUTF8()
+char* charSetConv::toUTF8()
 {
     char buf[100] = "";
     charSetConverter(charStr, buf, charsets::UTF8_CHARSET, charsets::KOI7_CHARSET);
@@ -56,7 +56,7 @@ char* KOI7::toUTF8()
     return charStr;
 }
 
-KOI7::~KOI7()
+charSetConv::~charSetConv()
 {
     if(!charStr) delete[] charStr;
 }

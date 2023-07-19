@@ -52,10 +52,10 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../server/koi7.cpp \
+SOURCES       = ../server/charsetconv.cpp \
 		../server/main.cpp \
 		../server/server.cpp moc_server.cpp
-OBJECTS       = koi7.o \
+OBJECTS       = charsetconv.o \
 		main.o \
 		server.o \
 		moc_server.o
@@ -137,9 +137,9 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../server/server1.pro ../server/koi7.h \
+		../server/server1.pro ../server/charsetconv.h \
 		../server/server.h \
-		../server/Serversettings.h ../server/koi7.cpp \
+		../server/Serversettings.h ../server/charsetconv.cpp \
 		../server/main.cpp \
 		../server/server.cpp
 QMAKE_TARGET  = server1
@@ -327,8 +327,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../server/koi7.h ../server/server.h ../server/Serversettings.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../server/koi7.cpp ../server/main.cpp ../server/server.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../server/charsetconv.h ../server/server.h ../server/Serversettings.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../server/charsetconv.cpp ../server/main.cpp ../server/server.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../server/server.ui $(DISTDIR)/
 
 
@@ -390,8 +390,8 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 
 ####### Compile
 
-koi7.o: ../server/koi7.cpp ../server/koi7.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o koi7.o ../server/koi7.cpp
+charsetconv.o: ../server/charsetconv.cpp ../server/charsetconv.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o charsetconv.o ../server/charsetconv.cpp
 
 main.o: ../server/main.cpp ../server/server.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../server/main.cpp
@@ -399,7 +399,7 @@ main.o: ../server/main.cpp ../server/server.h
 server.o: ../server/server.cpp ../server/server.h \
 		ui_server.h \
 		../server/Serversettings.h \
-		../server/koi7.h
+		../server/charsetconv.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o server.o ../server/server.cpp
 
 moc_server.o: moc_server.cpp 

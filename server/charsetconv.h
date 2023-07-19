@@ -1,18 +1,18 @@
-#ifndef KOI7_H
-#define KOI7_H
+#ifndef CHARSETCONV_H
+#define CHARSETCONV_H
 #include <string>
 
 
-class KOI7
+class charSetConv
 {
 public:
-    KOI7();
+    charSetConv();
     char* charStr = nullptr;
-    KOI7(char * charStr);
+    charSetConv(char * charStr);
     char* charSetConverter(char * charStr, char *resStr, const char* toCharSet, const char* fromCharSet);
     char* toKOI7();
     char* toUTF8();
-    ~KOI7();
+    ~charSetConv();
 };
 
-#endif // KOI7_H
+#endif // CHARSETCONV_H

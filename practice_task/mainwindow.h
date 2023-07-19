@@ -7,6 +7,25 @@
 #include "iostream"
 #include "string"
 
+typedef struct {
+    int checkSum;
+    char command[];
+} cmdStruct;
+
+#pragma pack(push, 1)
+
+typedef struct {
+    int checkSum;
+    time_t currentTime;
+    uint16_t cmdCount;
+    uint64_t fullTime;
+    uint8_t byteToggles;
+    char errorList[49];
+    char command[];
+} StatStruct;
+
+#pragma pack(pop)
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,38 +35,53 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-public:
+private:
     uint16_t clientId;
-    int checkSum = 0;
-    int tableSize = 0;
-    std::vector<QString> addresses;
+    QSet<QString> addresses;
 
+public:
     MainWindow(QWidget *parent=nullptr);
     ~MainWindow();
 
-private slots:
-    void on_pushButton_clicked();
 
-    void on_statBtn_clicked();
+public:
+    void initSocket(QHostAddress address, int port);
+    void readPendingDatagrams();
+    void sendDatagram(const char command[], const uint16_t id,
+                      const QHostAddress address, const int port);
 
-    void on_endSessionBtn_clicked();
+public:
+    bool isInit(QString address);
+    bool isInit(QHostAddress address, int port);
+    void addAddress(QHostAddress address, int port);
+    void removeAddress(QHostAddress address, int port);
 
-    void on_sessionTable_cellDoubleClicked(int row);
+public:
+    int makeCheckSum(QByteArray &datagram);
+    void byteToToggles(uint8_t byteToggles);
+    QHostAddress getAddressFromQStr(QString fullAddress);
+    int getPortFromQStr(QString fullAddress);
+
+public:
+    void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
+    void readStat(StatStruct *readStatData);
+    void readAsk(QNetworkDatagram &datagram, cmdStruct *readData);
+    void sendEnd();
 
 private:
     Ui::MainWindow *ui;
 
-    void initSocket(QHostAddress address, int port);
-    void readPendingDatagrams();
-    void sendDatagram(const char command[], const uint16_t id, const QHostAddress address, const int port);
-    int makeCheckSum(QByteArray &datagram);
-    void addAddress(QHostAddress address, int port);
-    void removeAddress(QHostAddress address, int port);
+private:
+    int checkSum = 0;
 
-    bool isInit(QString address);
-    bool isInit(QHostAddress address, int port);
+private:
     void fillTable();
-    void byteToToggles(uint8_t byteToggles);
     void clearWindow();
+    void setErrors(char errorList[]);
+private slots:
+    void on_pushButton_clicked();
+    void on_statBtn_clicked();
+    void on_endSessionBtn_clicked();
+    void on_sessionTable_cellDoubleClicked(int row);
 };
 #endif // MAINWINDOW_H
