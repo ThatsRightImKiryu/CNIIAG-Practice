@@ -23,7 +23,6 @@ typedef struct {
     char errorList[42];
     char command[];
 } StatStruct;
-
 #pragma pack(pop)
 
 
@@ -58,7 +57,7 @@ public:
 
 public:
     int makeCheckSum(QByteArray &datagram);
-    void byteToToggles(uint8_t byteToggles);
+    void setByteToToggles(uint8_t byteToggles);
     QHostAddress getAddressFromQStr(QString fullAddress);
     int getPortFromQStr(QString fullAddress);
 
@@ -77,7 +76,10 @@ private:
 private:
     void fillTable();
     void clearWindow();
+    void setProcessedToggles(char *errorList, char byteToggles);
     void setErrors(char errorList[]);
+    void setMajorData(uint16_t cmdCount, time_t currentTime, uint64_t fullTime);
+
 private slots:
     void on_pushButton_clicked();
     void on_statBtn_clicked();

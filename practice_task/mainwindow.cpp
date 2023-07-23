@@ -153,7 +153,7 @@ int MainWindow::makeCheckSum(QByteArray &datagram){
     return *reinterpret_cast<int*>(hashedDatagram.data());
 }
 
-void MainWindow::byteToToggles(uint8_t byteToggles)
+void MainWindow::setByteToToggles(uint8_t byteToggles)
 {
     QList<QLineEdit *> lineEdits = ui->groupBox_toggle->findChildren<QLineEdit*>();
     for(auto le: lineEdits)
@@ -188,6 +188,26 @@ void MainWindow::setErrors(char errorList[])
             i += deviceStates::TOGGLE_INVALID_SIZE;
         }
     }
+}
+
+void MainWindow::setProcessedToggles(char *errorList, char byteToggles)
+{
+
+    char decompressedErrors[100]{'\0'}, errorsRes[100]{'\0'};
+    charSetConv conv;
+
+    conv.decompress7To8bits(errorList, decompressedErrors);
+    conv.toUTF8(decompressedErrors, errorsRes);
+    setErrors(errorsRes);
+
+    setByteToToggles(byteToggles);
+}
+
+void MainWindow::setMajorData(uint16_t cmdCount,time_t currentTime, uint64_t fullTime)
+{
+    ui->currentTimeLE->setText(std::asctime(std::localtime(&currentTime)));
+    ui->workingTimeLE->setText(QString::number(fullTime));
+    ui->commandLE->setText(QString::number(cmdCount));
 }
 
 void MainWindow::clearWindow()
@@ -254,38 +274,9 @@ void MainWindow::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
 }
 
 void MainWindow::readStat(StatStruct readStatData)
-{
-
-    ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData.currentTime)));
-    ui->workingTimeLE->setText(QString::number(readStatData.fullTime));
-    ui->commandLE->setText(QString::number(readStatData.cmdCount));
-
-    char uncompressedErrors[100]{'\0'}, errorsRes[100]{'\0'};
-
-
-    charSetConv conv;
-
-    conv.uncompress7To8bits(readStatData.errorList, uncompressedErrors);
-
-    conv.toUTF8(uncompressedErrors, errorsRes);
-
-    setErrors(errorsRes);
-
-    byteToToggles(readStatData.byteToggles);
-
-//    ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData.currentTime)));
-//    ui->workingTimeLE->setText(QString::number(readStatData.fullTime));
-//    ui->commandLE->setText(QString::number(readStatData.cmdCount));
-
-//    char errorsRes[100];
-//    charSetConv conv;
-
-//    conv.toUTF8(readStatData.errorList, errorsRes);
-
-//    setErrors(errorsRes);
-
-//    byteToToggles(readStatData.byteToggles);
-
+{   
+   setMajorData(readStatData.cmdCount, readStatData.currentTime, readStatData.fullTime);
+   setProcessedToggles(readStatData.errorList, readStatData.byteToggles);
 }
 
 
@@ -305,7 +296,6 @@ void MainWindow::readAsk(QNetworkDatagram &datagram, cmdStruct *readData)
 void MainWindow::sendEnd()
 {
     QString LEText = ui->lineEdit->text();
-
     QHostAddress address = getAddressFromQStr(LEText);
     int port = getPortFromQStr(LEText);
 
