@@ -20,7 +20,7 @@ typedef struct {
     uint16_t cmdCount;
     uint64_t fullTime;
     uint8_t byteToggles;
-    char errorList[49];
+    char errorList[42];
     char command[];
 } StatStruct;
 
@@ -64,7 +64,7 @@ public:
 
 public:
     void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
-    void readStat(StatStruct *readStatData);
+    void readStat(StatStruct readStatData);
     void readAsk(QNetworkDatagram &datagram, cmdStruct *readData);
     void sendEnd();
 

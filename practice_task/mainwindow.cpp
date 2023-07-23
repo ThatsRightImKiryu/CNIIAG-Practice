@@ -7,12 +7,23 @@
 
 namespace labels
 {
-    const char *TOGGLE_ON = "ВКЛ.";
-    const char *TOGGLE_OFF = "ВЫКЛ.";
-    const char *TOGGLE_OK = "Исправно";
-    const char *TOGGLE_FAIL = "Не работает";
-
+    const char *TOGGLE_ON = "ON";
+    const char *TOGGLE_OFF = "OFF";
+    const char *TOGGLE_OK = "Correct";
+    const char *TOGGLE_INVALID = "INVALID";
 }
+
+
+namespace deviceStates
+{
+//STATES
+    const char *TOGGLE_OK = "испр.#";
+    const char *TOGGLE_INVALID = "ошибка";
+//SIZES
+    const int TOGGLE_OK_SIZE = strlen(TOGGLE_OK);
+    const int TOGGLE_INVALID_SIZE = strlen(TOGGLE_INVALID);
+}
+
 short session_id;
 QUdpSocket *udpSocket;
 
@@ -144,7 +155,7 @@ int MainWindow::makeCheckSum(QByteArray &datagram){
 
 void MainWindow::byteToToggles(uint8_t byteToggles)
 {
-    QList<QLineEdit *> lineEdits = ui->groupBox_err->findChildren<QLineEdit*>();
+    QList<QLineEdit *> lineEdits = ui->groupBox_toggle->findChildren<QLineEdit*>();
     for(auto le: lineEdits)
     {
        if(byteToggles % 2)
@@ -159,20 +170,24 @@ void MainWindow::setErrors(char errorList[])
 {
 
     QList<QLineEdit *> errLineEdits = ui->groupBox_err->findChildren<QLineEdit*>();
-    char *error = new char[7]{'\0'};
-    for(int i = 0; i < errLineEdits.size(); i++)
+    int i = 0;
+    for(auto ele: errLineEdits)
     {
-      strncpy(error, errorList+i*6, 6);
-      if(!qstrcmp(error, "испр.#"))
-      {
-          errLineEdits[i]->setText(labels::TOGGLE_OK);
-      }
-      if(!qstrcmp(error, "ошибка"))
-      {
-          errLineEdits[i]->setText(labels::TOGGLE_FAIL);
-      }
+        char error[13]{'\0'};
+        memcpy(error, errorList+i, deviceStates::TOGGLE_OK_SIZE);
+        if(!qstrcmp(error, deviceStates::TOGGLE_OK))
+        {
+            ele->setText(labels::TOGGLE_OK);
+            i += deviceStates::TOGGLE_OK_SIZE;
+            continue;
+        }
+        memcpy(error, errorList+i, deviceStates::TOGGLE_INVALID_SIZE);
+        if(!qstrcmp(error, deviceStates::TOGGLE_INVALID))
+        {
+            ele->setText(labels::TOGGLE_INVALID);
+            i += deviceStates::TOGGLE_INVALID_SIZE;
+        }
     }
-    delete[] error;
 }
 
 void MainWindow::clearWindow()
@@ -233,20 +248,44 @@ void MainWindow::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
     StatStruct *readStatData = reinterpret_cast<StatStruct *>(datagram.data().data());
     if(!qstrcmp(readStatData->command, cmdSettings::STAT))
     {
-        readStat(readStatData);
+        readStat(*readStatData);
     }
 
 }
 
-void MainWindow::readStat(StatStruct *readStatData)
+void MainWindow::readStat(StatStruct readStatData)
 {
-    ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData->currentTime)));
-    ui->workingTimeLE->setText(QString::number(readStatData->fullTime));
-    ui->commandLE->setText(QString::number(readStatData->cmdCount));
-    byteToToggles(readStatData->byteToggles);
-    charSetConv utf8_str(readStatData->errorList);
-//    setErrors(utf8_str.toUTF8());
-    qDebug()<<"STAT package"<<utf8_str.toUTF8();
+
+    ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData.currentTime)));
+    ui->workingTimeLE->setText(QString::number(readStatData.fullTime));
+    ui->commandLE->setText(QString::number(readStatData.cmdCount));
+
+    char uncompressedErrors[100]{'\0'}, errorsRes[100]{'\0'};
+
+
+    charSetConv conv;
+
+    conv.uncompress7To8bits(readStatData.errorList, uncompressedErrors);
+
+    conv.toUTF8(uncompressedErrors, errorsRes);
+
+    setErrors(errorsRes);
+
+    byteToToggles(readStatData.byteToggles);
+
+//    ui->currentTimeLE->setText(std::asctime(std::localtime(&readStatData.currentTime)));
+//    ui->workingTimeLE->setText(QString::number(readStatData.fullTime));
+//    ui->commandLE->setText(QString::number(readStatData.cmdCount));
+
+//    char errorsRes[100];
+//    charSetConv conv;
+
+//    conv.toUTF8(readStatData.errorList, errorsRes);
+
+//    setErrors(errorsRes);
+
+//    byteToToggles(readStatData.byteToggles);
+
 }
 
 

@@ -6,13 +6,13 @@
 class charSetConv
 {
 public:
-    charSetConv();
-    char* charStr = nullptr;
-    charSetConv(char * charStr);
-    char* charSetConverter(char * charStr, char *resStr, const char* toCharSet, const char* fromCharSet);
-    char* toKOI7();
-    char* toUTF8();
-    ~charSetConv();
+    charSetConv(){};
+    char* charSetConverter(char * src, char *dst, const char* toCharSet, const char* fromCharSet);
+    char* toKOI7(char *src, char *dst);
+    char* toUTF8(char *src, char *dst);
+    char* compress8To7bits(char *src, char *dst);
+    char* uncompress7To8bits(char *src, char *dst);
+    ~charSetConv(){};
 };
 
 #endif // CHARSETCONV_H

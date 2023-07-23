@@ -97,7 +97,7 @@ void Server::sendDatagram(int checkSum, const char command[],
 
     makeErrorsPackage(errorsList);
 
-    datagram.append(errorsList, 49);
+    datagram.append(errorsList, 42);
 
     datagram.append(command, strlen(command) + 1);
 
@@ -196,7 +196,7 @@ void Server::makeErrorsPackage(char * charStr)
     QList<QCheckBox *> errToggles = ui->groupBox_err->findChildren<QCheckBox*>();
     const char* errorWord = "ошибка";
     const char* okWord = "испр.#";
-    char *resStr = new char[100]{'\0'};
+    char resStr[100]{'\0'};
     for(auto et: errToggles)
     {
         if( et->isChecked() )
@@ -204,7 +204,9 @@ void Server::makeErrorsPackage(char * charStr)
         else
             strncat(resStr, okWord, strlen(errorWord));
     }
-    charSetConv charSetConv_str(resStr);
-    qstrcpy(charStr, charSetConv_str.toKOI7());
-    if(!resStr) delete[] resStr;
+    charSetConv conv;
+    char KOI7ResStr[100]{'\0'}, compressedResStr[100]{'\0'};
+    conv.toKOI7(resStr, KOI7ResStr);
+    conv.compress8To7bits(KOI7ResStr, compressedResStr);
+    qstrcpy(charStr, compressedResStr);
 }
