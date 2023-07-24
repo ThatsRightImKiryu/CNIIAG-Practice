@@ -181,6 +181,7 @@ void MainWindow::setErrors(char errorList[])
             i += deviceStates::TOGGLE_OK_SIZE;
             continue;
         }
+
         memcpy(error, errorList+i, deviceStates::TOGGLE_INVALID_SIZE);
         if(!qstrcmp(error, deviceStates::TOGGLE_INVALID))
         {
@@ -197,7 +198,7 @@ void MainWindow::setProcessedToggles(char *errorList, char byteToggles)
     charSetConv conv;
 
     conv.decompress7To8bits(errorList, decompressedErrors);
-    conv.toUTF8(decompressedErrors, errorsRes);
+    conv.fromKOI7toUTF8(decompressedErrors, errorsRes);
     setErrors(errorsRes);
 
     setByteToToggles(byteToggles);

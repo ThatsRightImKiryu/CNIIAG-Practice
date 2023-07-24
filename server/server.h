@@ -38,11 +38,25 @@ namespace Ui { class Server; }
 QT_END_NAMESPACE
 
 
+/*!
+ \brief Device emulator
+   Class for emulating device due to protocol(init and status).
+
+  - initializing client == read client: (uint16_t random_id, const char* "ini")
+  -> send client (uint32_t crcpkg, char * "ask"):
+
+- statistics of server == read client: (uint16_t id, const char* "sta") - >
+  -> send client (uint32_t crcpkg, uint16_t cmdCount, uint16_t current_time, uint64_t worktime,  char * "ask") +
+
+  + byte of 8 toggle states(0 - off; 1 - on) and its 8 errors ("ошибка" - invalid, "испр.№" - correct);
+
+  Error list includes KOI7 encoding then compressing 8 bits to 7(8 toggles = 42 bytes): charsetconv.h
+*/
 class Server: public QMainWindow
 {
-    Q_OBJECT
 
 public:
+
     Server(QWidget *parent = nullptr);
     ~Server();
 

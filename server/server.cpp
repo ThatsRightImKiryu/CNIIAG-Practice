@@ -10,6 +10,11 @@
 short session_id;
 QUdpSocket *udpSocket;
 
+/*!
+ \class Server::Server(QWidget *parent)
+
+ \brief Consrtucotr for initialize socket and visual part of server
+ */
 Server::Server(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Server)
@@ -31,7 +36,15 @@ Server::~Server()
 
 //-----------Socket Methods-----------//
 
-void Server::initSocket(QHostAddress address, int port){
+/*!
+ \class void Server::initSocket(QHostAddress address, int port)
+
+ \brief Method to bind udpSocket using address and port
+        and pending datagrams
+ */
+void Server::initSocket(QHostAddress address, int port)
+{
+
     udpSocket = new QUdpSocket(this);
     udpSocket->bind(address, port);
 
@@ -93,11 +106,11 @@ void Server::sendDatagram(int checkSum, const char command[],
 
     datagram.append(togglesToByte());
 
-    char errorsList[100] = "";
+    char errorsList[100]{'\0'};
 
     makeErrorsPackage(errorsList);
 
-    datagram.append(errorsList, 42);
+    datagram.append(errorsList, strlen(errorsList));
 
     datagram.append(command, strlen(command) + 1);
 
@@ -197,6 +210,7 @@ void Server::makeErrorsPackage(char * charStr)
     const char* errorWord = "ошибка";
     const char* okWord = "испр.#";
     char resStr[100]{'\0'};
+
     for(auto et: errToggles)
     {
         if( et->isChecked() )
@@ -204,9 +218,12 @@ void Server::makeErrorsPackage(char * charStr)
         else
             strncat(resStr, okWord, strlen(errorWord));
     }
+
     charSetConv conv;
     char KOI7ResStr[100]{'\0'}, compressedResStr[100]{'\0'};
-    conv.toKOI7(resStr, KOI7ResStr);
+
+    conv.fromUTF8toKOI7(resStr, KOI7ResStr);
     conv.compress8To7bits(KOI7ResStr, compressedResStr);
+
     qstrcpy(charStr, compressedResStr);
 }
