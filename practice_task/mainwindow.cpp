@@ -273,7 +273,7 @@ void MainWindow::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
 
 }
 
-void MainWindow::readStat(StatStruct readStatData)
+void MainWindow::readStat(StatStruct &readStatData)
 {   
    setMajorData(readStatData.cmdCount, readStatData.currentTime, readStatData.fullTime);
    setProcessedToggles(readStatData.errorList, readStatData.byteToggles);

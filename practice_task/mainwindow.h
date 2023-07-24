@@ -63,7 +63,7 @@ public:
 
 public:
     void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
-    void readStat(StatStruct readStatData);
+    void readStat(StatStruct &readStatData);
     void readAsk(QNetworkDatagram &datagram, cmdStruct *readData);
     void sendEnd();
 
