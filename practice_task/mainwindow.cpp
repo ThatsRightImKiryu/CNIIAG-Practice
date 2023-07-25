@@ -197,7 +197,7 @@ void MainWindow::setProcessedToggles(char *errorList, char byteToggles)
     char decompressedErrors[100]{'\0'}, errorsRes[100]{'\0'};
     charSetConv conv;
 
-    conv.decompress7To8bits(errorList, decompressedErrors);
+    conv.decompress7To8bits(prepareErrorList(errorList), decompressedErrors);
     conv.fromKOI7toUTF8(decompressedErrors, errorsRes);
     setErrors(errorsRes);
 
@@ -226,7 +226,7 @@ void MainWindow::clearWindow()
     }
 
     QList<QLineEdit *> errToggles = ui->groupBox_err->findChildren<QLineEdit*>();
-    for(auto et: toggles)
+    for(auto et: errToggles)
     {
         et->clear();
     }
@@ -241,11 +241,16 @@ void MainWindow::addAddress(QHostAddress address, int port){
         addresses.insert(fullAddress);
 }
 
+void MainWindow::removeAddress(QString fullAddress){
+    addresses.remove(fullAddress);
+}
+
 void MainWindow::removeAddress(QHostAddress address, int port){
     QString fullAddress = address.toString() + ":" + QString::number(port);
 
-    addresses.remove(fullAddress);
+    removeAddress(fullAddress);
 }
+
 
 bool MainWindow::isInit(QString address){
    return addresses.contains(address);
@@ -262,15 +267,14 @@ void MainWindow::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
     ui->lineEdit_pkgSize->setText(QString::number(datagram.data().size()));
 
     if(!qstrcmp(readData->command, cmdSettings::ASK))
-    {
         readAsk(datagram, readData);
-    }
+
+    if(!qstrcmp(readData->command, cmdSettings::END))
+        readEnd();
 
     StatStruct *readStatData = reinterpret_cast<StatStruct *>(datagram.data().data());
     if(!qstrcmp(readStatData->command, cmdSettings::STAT))
-    {
         readStat(*readStatData);
-    }
 
 }
 
@@ -294,16 +298,24 @@ void MainWindow::readAsk(QNetworkDatagram &datagram, cmdStruct *readData)
     else qDebug()<<"Package sending FAILED";
 }
 
+void MainWindow::readEnd()
+{
+    qDebug()<<"Session Destroyed succsessfully";
+    QString fullAddress = ui->lineEdit->text();
+    removeAddress(fullAddress);
+    fillTable();
+    clearWindow();
+}
+
 void MainWindow::sendEnd()
 {
     QString LEText = ui->lineEdit->text();
     QHostAddress address = getAddressFromQStr(LEText);
     int port = getPortFromQStr(LEText);
 
-    removeAddress(address, port);
-    fillTable();
     sendDatagram(cmdSettings::END, clientId, address, port);
 }
+
 
 QHostAddress MainWindow::getAddressFromQStr(QString fullAddress)
 {
@@ -315,4 +327,9 @@ int MainWindow::getPortFromQStr(QString fullAddress)
 {
     QStringList slist = fullAddress.split(":");
     return slist.value(1).toInt();
+}
+
+inline char* MainWindow::prepareErrorList(char* errorList)
+{
+    return (errorList[ERROR_LIST_SIZE] = '\0', errorList);
 }

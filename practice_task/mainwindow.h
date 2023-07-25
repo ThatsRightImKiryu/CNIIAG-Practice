@@ -12,6 +12,9 @@ typedef struct {
     char command[];
 } cmdStruct;
 
+
+#define ERROR_LIST_SIZE 42
+
 #pragma pack(push, 1)
 
 typedef struct {
@@ -20,9 +23,10 @@ typedef struct {
     uint16_t cmdCount;
     uint64_t fullTime;
     uint8_t byteToggles;
-    char errorList[42];
+    char errorList[ERROR_LIST_SIZE];
     char command[];
 } StatStruct;
+
 #pragma pack(pop)
 
 
@@ -54,6 +58,8 @@ public:
     bool isInit(QHostAddress address, int port);
     void addAddress(QHostAddress address, int port);
     void removeAddress(QHostAddress address, int port);
+    void removeAddress(QString fullAdress);
+
 
 public:
     int makeCheckSum(QByteArray &datagram);
@@ -65,6 +71,7 @@ public:
     void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
     void readStat(StatStruct &readStatData);
     void readAsk(QNetworkDatagram &datagram, cmdStruct *readData);
+    void readEnd();
     void sendEnd();
 
 private:
@@ -79,7 +86,7 @@ private:
     void setProcessedToggles(char *errorList, char byteToggles);
     void setErrors(char errorList[]);
     void setMajorData(uint16_t cmdCount, time_t currentTime, uint64_t fullTime);
-
+    inline char* prepareErrorList(char* errorList);
 private slots:
     void on_pushButton_clicked();
     void on_statBtn_clicked();

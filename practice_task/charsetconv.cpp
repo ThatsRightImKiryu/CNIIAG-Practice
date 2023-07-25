@@ -28,7 +28,7 @@ char *charSetConv::charSetConverter(char *src, char *dst, charSets toCharSetId, 
     if ((cd = iconv_open(toCharSet, fromCharSet)) == (iconv_t)(-1)) {
         fprintf(stderr, "Cannot open converter from %s to %s\n",
                                            toCharSet, fromCharSet);
-        exit(8);
+//        exit(8);
     }
 
     char   *inptr = src;

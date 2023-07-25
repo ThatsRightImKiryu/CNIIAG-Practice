@@ -54,6 +54,14 @@ void Server::initSocket(QHostAddress address, int port)
     qDebug()<<"Server Listening on address="<<address<<":"<<port;
 }
 
+/*!
+ * \brief Server::readPendingDatagrams
+ * wating udpDatagram to read using cmdStruct.
+ * if data includes form of cmdStruct
+ * methd initialize client.
+ * If it is -> check if command is status requset
+ * when client if authorized via void Server::readPendingDatagrams().
+ */
 void Server::readPendingDatagrams()
 {
     while (udpSocket->hasPendingDatagrams()) {
@@ -73,9 +81,13 @@ void Server::readPendingDatagrams()
 
 }
 
+/*!
+ * \brief Server::sendDatagram
+ * is for sending regular packages like init
+ * using cmdStruct
+ */
 void Server::sendDatagram(int checkSum, const char command[],
                           const QHostAddress address, const int port){
-    //For STAT command
     QByteArray datagram;
     char *intBytes = reinterpret_cast<char*>(&checkSum);
 
@@ -86,10 +98,15 @@ void Server::sendDatagram(int checkSum, const char command[],
     qDebug()<<"Sent successfully"<<command;
 }
 
+/*!
+ * \brief Method is for sending packages formed like
+ * using statStruct
+ */
+
 void Server::sendDatagram(int checkSum, const char command[],
                           std::time_t currentTime, std::time_t fullTime,
-                          const QHostAddress address, const int port){
-    //For other regular commands
+                          const QHostAddress address, const int port)
+{
     QByteArray datagram;
 
     char *intBytes = reinterpret_cast<char*>(&checkSum);
@@ -120,6 +137,11 @@ void Server::sendDatagram(int checkSum, const char command[],
 
 //-----------Session Methods-----------//
 
+/*!
+ * \brief Server::addSession
+ * get session_id and check if it is inititalized
+ * and add it if not
+ */
 void Server::addSession(uint16_t id){
     if(isInit(id)){
         qDebug()<<"Session WAS ALREADY inClientStructit";
@@ -137,19 +159,32 @@ bool Server::isInit(int id){
 
 //-----------Computing Methods-----------//
 
+/*!
+ * \brief Server::makeCheckSum
+ * make crc of initializing datagram package
+ * and hash it to 4 bytes
+ */
 int Server::makeCheckSum(QByteArray &datagram){
     QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(hashedDatagram.data());
 }
 
 
-
+/*!
+ * \brief Server::workingTime
+ * if for status packages
+ */
 inline std::time_t Server::workingTime(std::time_t currentTime,
                                std::time_t startTime)
 {
     return currentTime - startTime;
 }
 
+/*!
+ * \brief Server::chooseCmd
+ * choose what to do with package
+ * due to package data
+ */
 void Server::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
 {
     QByteArray datagamBytes = datagram.data();
@@ -166,6 +201,7 @@ void Server::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
 
         if(!qstrcmp(readData->command, cmdSettings::END)){
             readEnd(readData);
+            sendEnd(datagram, checkSum);
         }
     }
 
@@ -186,11 +222,16 @@ void Server::sendStat(QNetworkDatagram &datagram, int checkSum)
                  datagram.senderAddress(), networkSettings::CLIENT_PORT);
 }
 
+void Server::sendEnd(QNetworkDatagram &datagram, int checkSum)
+{
+    sendDatagram(checkSum, cmdSettings::END, datagram.senderAddress(),
+                 networkSettings::CLIENT_PORT);
+}
+
 void Server::readEnd(cmdStruct *readData)
 {
     sessions.remove(readData->id);
     qDebug()<<"Session is destroyed"<<readData->id;
-    return;
 }
 
 char Server::togglesToByte()

@@ -39,7 +39,7 @@ QT_END_NAMESPACE
 
 
 /*!
- \brief Device emulator
+\brief Device emulator
    Class for emulating device due to protocol(init and status).
 
   - initializing client == read client: (uint16_t random_id, const char* "ini")
@@ -73,6 +73,7 @@ public:
     void chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData);
     void sendInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum);
     void sendStat(QNetworkDatagram &datagram, int checkSum);
+    void sendEnd(QNetworkDatagram &datagram, int checkSum);
     void readEnd(cmdStruct *readData);
 
 public:
