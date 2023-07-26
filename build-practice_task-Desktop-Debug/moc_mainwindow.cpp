@@ -23,7 +23,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
     QByteArrayData data[7];
-    char stringdata0[116];
+    char stringdata0[120];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -33,16 +33,16 @@ struct qt_meta_stringdata_MainWindow_t {
 static const qt_meta_stringdata_MainWindow_t qt_meta_stringdata_MainWindow = {
     {
 QT_MOC_LITERAL(0, 0, 10), // "MainWindow"
-QT_MOC_LITERAL(1, 11, 21), // "on_pushButton_clicked"
-QT_MOC_LITERAL(2, 33, 0), // ""
-QT_MOC_LITERAL(3, 34, 18), // "on_statBtn_clicked"
-QT_MOC_LITERAL(4, 53, 24), // "on_endSessionBtn_clicked"
-QT_MOC_LITERAL(5, 78, 33), // "on_sessionTable_cellDoubleCli..."
-QT_MOC_LITERAL(6, 112, 3) // "row"
+QT_MOC_LITERAL(1, 11, 25), // "on_initPushButton_clicked"
+QT_MOC_LITERAL(2, 37, 0), // ""
+QT_MOC_LITERAL(3, 38, 18), // "on_statBtn_clicked"
+QT_MOC_LITERAL(4, 57, 24), // "on_endSessionBtn_clicked"
+QT_MOC_LITERAL(5, 82, 33), // "on_sessionTable_cellDoubleCli..."
+QT_MOC_LITERAL(6, 116, 3) // "row"
 
     },
-    "MainWindow\0on_pushButton_clicked\0\0"
-    "on_statBtn_clicked\0on_endSessionBtn_clicked\0"
+    "MainWindow\0on_initPushButton_clicked\0"
+    "\0on_statBtn_clicked\0on_endSessionBtn_clicked\0"
     "on_sessionTable_cellDoubleClicked\0row"
 };
 #undef QT_MOC_LITERAL
@@ -81,7 +81,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         auto *_t = static_cast<MainWindow *>(_o);
         (void)_t;
         switch (_id) {
-        case 0: _t->on_pushButton_clicked(); break;
+        case 0: _t->on_initPushButton_clicked(); break;
         case 1: _t->on_statBtn_clicked(); break;
         case 2: _t->on_endSessionBtn_clicked(); break;
         case 3: _t->on_sessionTable_cellDoubleClicked((*reinterpret_cast< int(*)>(_a[1]))); break;

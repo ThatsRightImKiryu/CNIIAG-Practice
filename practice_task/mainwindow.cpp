@@ -13,7 +13,6 @@ namespace labels
     const char *TOGGLE_INVALID = "INVALID";
 }
 
-
 namespace deviceStates
 {
 //STATES
@@ -22,10 +21,8 @@ namespace deviceStates
 //SIZES
     const int TOGGLE_OK_SIZE = strlen(TOGGLE_OK);
     const int TOGGLE_INVALID_SIZE = strlen(TOGGLE_INVALID);
+    const int MAX_STATE_SIZE = 13;
 }
-
-short session_id;
-QUdpSocket *udpSocket;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -33,67 +30,38 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    srand(time(nullptr));
-    clientId = rand() % 65536;
-
-    initSocket(networkSettings::ADDRESS, networkSettings::CLIENT_PORT);
+    setClientId();
+    initSocket(networkSettings::ADDRESS,
+               networkSettings::CLIENT_PORT);
 }
 MainWindow::~MainWindow()
+{
+    destroyAllSessions();
+
+    udpSocket->close();
+    delete udpSocket;
+    delete ui;
+}
+
+void MainWindow::destroyAllSessions()
 {
     for(auto a: addresses)
     {
         QHostAddress address = getAddressFromQStr(a);
         int port = getPortFromQStr(a);
 
-        removeAddress(address, port);
-        sendDatagram(cmdSettings::END, clientId, address, port);
+        sendEnd(address, port);
     }
-    udpSocket->close();
-    delete udpSocket;
-    delete ui;
+
 }
-//---------------------------------Slot and "front" Methods---------------------------------//
+//---------------------------------"Front" Methods---------------------------------//
 
 
-void MainWindow::on_pushButton_clicked()
-{
-    QString LEText = ui->lineEdit->text();
-
-    sendDatagram(cmdSettings::INIT, clientId, getAddressFromQStr(LEText), getPortFromQStr(LEText));
-}
-
-void MainWindow::on_statBtn_clicked()
-{
-    QString LEText = ui->lineEdit->text();
-
-    QHostAddress address = getAddressFromQStr(LEText);
-    int port = getPortFromQStr(LEText);
-
-    clearWindow();
-    sendDatagram(cmdSettings::STAT, clientId, address, port);
-}
-
-void MainWindow::on_endSessionBtn_clicked()
-{
-    sendEnd();
-}
-
-void MainWindow::on_sessionTable_cellDoubleClicked(int row)
-{
-    QString address = ui->sessionTable->item(row, 1)->text();
-    ui->lineEdit->setText(address);
-}
-
-
-void MainWindow::fillTable(){
+void MainWindow::fillAddressTable(){
     QTableWidget *table = ui->sessionTable;
 
-    //Set table to default
-    table->clear(); table->setRowCount(0);
-    QStringList headers = {"Session id","Server address"};
-    table->setHorizontalHeaderLabels(headers);
+    setAddressTableToDefault(table);
 
-    //filling table
     for(auto address: addresses)
     {
         int rowCount = table->rowCount();
@@ -103,15 +71,81 @@ void MainWindow::fillTable(){
     }
 }
 
+void MainWindow::setAddressTableToDefault(QTableWidget *table)
+{
+    table->clear(); table->setRowCount(0);
+    QStringList headers = {"Session id","Server address"};
+    table->setHorizontalHeaderLabels(headers);
+}
+
+//---------------------------------Private Slots---------------------------------//
+
+void MainWindow::on_initPushButton_clicked()
+{
+    QHostAddress address;
+    int port;
+    setAddressAndPortFromLineEdit(address, port);
+
+    sendDatagram(prepareDatagram(cmdSettings::INIT, clientId),
+                 address, port);
+}
+
+void MainWindow::on_statBtn_clicked()
+{
+    QHostAddress address;
+    int port;
+    setAddressAndPortFromLineEdit(address, port);
+
+    sendDatagram(prepareDatagram(cmdSettings::STAT, clientId),
+                 address, port);
+}
+
+void MainWindow::on_endSessionBtn_clicked()
+{
+    QHostAddress address;
+    int port;
+    setAddressAndPortFromLineEdit(address, port);
+
+    sendEnd(address, port);
+}
+
+void MainWindow::on_sessionTable_cellDoubleClicked(int row)
+{
+    QString address = ui->sessionTable->item(row, 1)->text();
+    ui->addressLineEdit->setText(address);
+}
+
+
 
 //---------------------------------Socket Methods---------------------------------//
 
-void MainWindow::initSocket(QHostAddress address, int port){
+void MainWindow::setClientId()
+{
+    /*!
+     * Max value of type due to client id type.
+     * For example: sizeof(uint16_t clientId) == 65536
+    */
+    uint64_t maxClientId = 1;
+    maxClientId <<= (sizeof(clientId)*8 - 1);
+
+    srand(time(nullptr));
+    clientId = rand() % maxClientId;
+
+}
+void MainWindow::initSocket(QHostAddress address, int port)
+{
     udpSocket = new QUdpSocket(this);
-    udpSocket->bind(address, port);
-    connect(udpSocket, &QUdpSocket::readyRead,
-                this, &MainWindow::readPendingDatagrams);
-    qInfo()<<"Listening client on "<<address<<port;
+    if(!udpSocket->bind(address, port))
+        qDebug()<<"Binding FAILED"<<address<<port;
+    else
+    {
+        if(connect(udpSocket, &QUdpSocket::readyRead,
+                    this, &MainWindow::readPendingDatagrams))
+            qDebug()<<"Listening client on "<<address<<port;
+        else
+            qDebug()<<"Listening FAILED "<<address<<port;
+    }
+
 }
 
 void MainWindow::readPendingDatagrams()
@@ -122,36 +156,30 @@ void MainWindow::readPendingDatagrams()
         QByteArray datagramByte = datagram.data();
 
         cmdStruct *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
-        qDebug()<<"Read successfully "<<readData->command;
+        qDebug()<<"Read successfully ";
 
-        chooseCmd(datagram, readData);
+        //show package size
+        ui->lineEdit_pkgSize->setText(QString::number(datagram.data().size()));
+
+        chooseCmd(datagram.senderAddress(), datagram.senderPort(), readData);
     }
 
 }
 
-void MainWindow::sendDatagram(const char command[], uint16_t id,
-                              const QHostAddress address, const int port){
-
-    QByteArray datagram;
-    char *idBytes = reinterpret_cast<char*>(&id);
-
-    datagram.append(idBytes, sizeof(id));
-    datagram.append(command, strlen(command) + 1);
-
-    if(!strcmp(command, cmdSettings::INIT) && !checkSum)
-        checkSum = makeCheckSum(datagram);
-
-    udpSocket->writeDatagram(datagram, address, port);
-    qDebug()<<"Sent successfully "<<command;
-
+void MainWindow::sendDatagram(QByteArray datagramByte,
+                              const QHostAddress address, const int port)
+{
+    udpSocket->writeDatagram(datagramByte, address, port);
 }
 
-//---------------------------------Computing Methods---------------------------------//
 
 int MainWindow::makeCheckSum(QByteArray &datagram){
     QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(hashedDatagram.data());
 }
+
+
+//---------------------------------"Front" Methods---------------------------------//
 
 void MainWindow::setByteToToggles(uint8_t byteToggles)
 {
@@ -166,6 +194,7 @@ void MainWindow::setByteToToggles(uint8_t byteToggles)
     }
 }
 
+
 void MainWindow::setErrors(char errorList[])
 {
 
@@ -173,7 +202,7 @@ void MainWindow::setErrors(char errorList[])
     int i = 0;
     for(auto ele: errLineEdits)
     {
-        char error[13]{'\0'};
+        char error[deviceStates::MAX_STATE_SIZE]{'\0'};
         memcpy(error, errorList+i, deviceStates::TOGGLE_OK_SIZE);
         if(!qstrcmp(error, deviceStates::TOGGLE_OK))
         {
@@ -181,6 +210,7 @@ void MainWindow::setErrors(char errorList[])
             i += deviceStates::TOGGLE_OK_SIZE;
             continue;
         }
+
         memcpy(error, errorList+i, deviceStates::TOGGLE_INVALID_SIZE);
         if(!qstrcmp(error, deviceStates::TOGGLE_INVALID))
         {
@@ -193,14 +223,16 @@ void MainWindow::setErrors(char errorList[])
 void MainWindow::setProcessedToggles(char *errorList, char byteToggles)
 {
 
-    char decompressedErrors[100]{'\0'}, errorsRes[100]{'\0'};
+    char decompressedErrors[ERROR_DECOMPRESSED_SIZE +1]{'\0'},
+         errorsRes[ERROR_CONVERTED_SIZE + 1]{'\0'};
     charSetConv conv;
 
-    conv.decompress7To8bits(errorList, decompressedErrors);
-    conv.toUTF8(decompressedErrors, errorsRes);
+    setByteToToggles(byteToggles);
+
+    conv.decompress7To8bits(prepareErrorList(errorList), decompressedErrors);
+    conv.fromKOI7toUTF8(decompressedErrors, errorsRes);
     setErrors(errorsRes);
 
-    setByteToToggles(byteToggles);
 }
 
 void MainWindow::setMajorData(uint16_t cmdCount,time_t currentTime, uint64_t fullTime)
@@ -212,24 +244,22 @@ void MainWindow::setMajorData(uint16_t cmdCount,time_t currentTime, uint64_t ful
 
 void MainWindow::clearWindow()
 {
-    QList<QLineEdit*> gbLineEdits = ui->StatusGroupBox->findChildren<QLineEdit*>();
-    for(auto le: gbLineEdits)
+    QList<QGroupBox *> groupBoxes = ui->centralwidget->findChildren<QGroupBox *>();
+    for(auto gb: groupBoxes)
+    {
+        clearQLineEditsFromGroupBox(gb);
+    }
+
+}
+
+void MainWindow::clearQLineEditsFromGroupBox(QGroupBox * groupBox)
+{
+    QList<QLineEdit *> lineEdits = groupBox->findChildren<QLineEdit *>();
+    for(auto le: lineEdits)
     {
         le->clear();
     }
-
-    QList<QLineEdit *> toggles = ui->groupBox_toggle->findChildren<QLineEdit*>();
-    for(auto t: toggles)
-    {
-        t->clear();
-    }
-
-    QList<QLineEdit *> errToggles = ui->groupBox_err->findChildren<QLineEdit*>();
-    for(auto et: toggles)
-    {
-        et->clear();
-    }
-}
+};
 
 //---------------------------------Session Methods---------------------------------//
 
@@ -240,68 +270,108 @@ void MainWindow::addAddress(QHostAddress address, int port){
         addresses.insert(fullAddress);
 }
 
-void MainWindow::removeAddress(QHostAddress address, int port){
-    QString fullAddress = address.toString() + ":" + QString::number(port);
+void MainWindow::removeAddress(QString fullAddress){
+    if(addresses.remove(fullAddress))
+        qDebug()<<"Session successfully destroyed";
+    else
+        qDebug()<<"Session destroy FAILED";
 
-    addresses.remove(fullAddress);
 }
+
+void MainWindow::removeAddress(QHostAddress address, int port){
+    QString fullAddress = makeFullAddress(address, port);
+
+    removeAddress(fullAddress);
+}
+
 
 bool MainWindow::isInit(QString address){
    return addresses.contains(address);
 }
 
 bool MainWindow::isInit(QHostAddress address, int port){
-    QString fullAddress = address.toString() + ":" + QString::number(port);
+    QString fullAddress = makeFullAddress(address, port);
 
     return isInit(fullAddress);
 }
 
-void MainWindow::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
+void MainWindow::chooseCmd(QHostAddress address, int port, cmdStruct *readData)
 {
-    ui->lineEdit_pkgSize->setText(QString::number(datagram.data().size()));
-
     if(!qstrcmp(readData->command, cmdSettings::ASK))
+        return readAsk(address, port, readData->checkSum);
+
+    if(!qstrcmp(readData->command, cmdSettings::END))
     {
-        readAsk(datagram, readData);
+        QString fullAddress = makeFullAddress(address, port);
+        return readEnd(fullAddress);
     }
 
-    StatStruct *readStatData = reinterpret_cast<StatStruct *>(datagram.data().data());
+    StatStruct *readStatData = reinterpret_cast<StatStruct *>(readData);
     if(!qstrcmp(readStatData->command, cmdSettings::STAT))
-    {
         readStat(*readStatData);
-    }
 
 }
 
-void MainWindow::readStat(StatStruct readStatData)
+QByteArray MainWindow::prepareDatagram(const char command[], uint16_t id)
+{
+    QByteArray datagramByte;
+    char *idBytes = reinterpret_cast<char*>(&id);
+
+    datagramByte.append(idBytes, sizeof(id));
+    datagramByte.append(command, strlen(command) + 1);
+
+    if(!strcmp(command, cmdSettings::INIT) && !checkSum)
+        checkSum = makeCheckSum(datagramByte);
+
+    qDebug()<<"Sending"<<command;
+
+    return datagramByte;
+}
+
+void MainWindow::readStat(StatStruct &readStatData)
 {   
    setMajorData(readStatData.cmdCount, readStatData.currentTime, readStatData.fullTime);
    setProcessedToggles(readStatData.errorList, readStatData.byteToggles);
 }
 
-
-void MainWindow::readAsk(QNetworkDatagram &datagram, cmdStruct *readData)
+void MainWindow::readAsk(QHostAddress address, int port, int pkgCheckSum)
 {
-    qDebug()<<"ASK package";
-    if(readData->checkSum==checkSum && //crc==got_from_package and init
-           !isInit(datagram.senderAddress(), datagram.senderPort()))
+    if(pkgCheckSum==checkSum && //crc==got_from_package and init
+           !isInit(address, port))
     {
-        addAddress(datagram.senderAddress(), datagram.senderPort());
-        fillTable();
+        addAddress(address, port);
+
+        clearWindow();
+        fillAddressTable();
         qDebug()<<"Package got successfully";
     }
-    else qDebug()<<"Package sending FAILED";
+    else qDebug()<<"Package getting FAILED";
 }
 
-void MainWindow::sendEnd()
+void MainWindow::readEnd(QString fullAddress)
 {
-    QString LEText = ui->lineEdit->text();
-    QHostAddress address = getAddressFromQStr(LEText);
-    int port = getPortFromQStr(LEText);
+    removeAddress(fullAddress);
 
-    removeAddress(address, port);
-    fillTable();
-    sendDatagram(cmdSettings::END, clientId, address, port);
+    fillAddressTable();
+    clearWindow();
+}
+
+void MainWindow::sendEnd(QHostAddress address, int port)
+{
+    sendDatagram(prepareDatagram(cmdSettings::END, clientId),
+                 address, port);
+}
+
+inline QString MainWindow::makeFullAddress(QHostAddress address, int port)
+{
+    return address.toString() + ":" + QString::number(port);
+}
+
+void MainWindow::setAddressAndPortFromLineEdit(QHostAddress &address, int &port)
+{
+    QString AddrLEText = ui->addressLineEdit->text();
+    address = getAddressFromQStr(AddrLEText);
+    port = getPortFromQStr(AddrLEText);
 }
 
 QHostAddress MainWindow::getAddressFromQStr(QString fullAddress)
@@ -314,4 +384,9 @@ int MainWindow::getPortFromQStr(QString fullAddress)
 {
     QStringList slist = fullAddress.split(":");
     return slist.value(1).toInt();
+}
+
+inline char* MainWindow::prepareErrorList(char* errorList)
+{
+    return (errorList[ERROR_LIST_SIZE] = '\0', errorList);
 }

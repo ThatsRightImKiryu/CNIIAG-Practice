@@ -7,9 +7,11 @@
 #include <Serversettings.h>
 #include <charsetconv.h>
 
-short session_id;
-QUdpSocket *udpSocket;
+/*!
+ \class Server::Server(QWidget *parent)
 
+ \brief Consrtucotr for initialize socket and visual part of server
+ */
 Server::Server(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Server)
@@ -23,24 +25,44 @@ Server::Server(QWidget *parent)
 
 Server::~Server()
 {
+
     delete ui;
     udpSocket->close();
     delete udpSocket;
 }
 
-
 //-----------Socket Methods-----------//
 
-void Server::initSocket(QHostAddress address, int port){
+/*!
+ \class void Server::initSocket(QHostAddress address, int port)
+
+ \brief Method to bind udpSocket using address and port
+        and pending datagrams
+ */
+void Server::initSocket(QHostAddress address, int port)
+{
+
     udpSocket = new QUdpSocket(this);
-    udpSocket->bind(address, port);
-
-    connect(udpSocket, &QUdpSocket::readyRead,
-                this, &Server::readPendingDatagrams);
-
-    qDebug()<<"Server Listening on address="<<address<<":"<<port;
+    if(!udpSocket->bind(address, port))
+        qDebug()<<"Binding FAILED"<<address<<port;
+    else
+    {
+        if(connect(udpSocket, &QUdpSocket::readyRead,
+                    this, &Server::readPendingDatagrams))
+            qDebug()<<"Listening client on "<<address<<port;
+        else
+            qDebug()<<"Listening FAILED "<<address<<port;
+    }
 }
 
+/*!
+ * \brief Server::readPendingDatagrams
+ * wating udpDatagram to read using cmdStruct.
+ * if data includes form of cmdStruct
+ * methd initialize client.
+ * If it is -> check if command is status requset
+ * when client if authorized via void Server::readPendingDatagrams().
+ */
 void Server::readPendingDatagrams()
 {
     while (udpSocket->hasPendingDatagrams()) {
@@ -53,63 +75,69 @@ void Server::readPendingDatagrams()
         cmdStruct  *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
 
         qDebug()<<"Read successfully "<<readData->command<<readData->id;
-
-        chooseCmd(datagram, readData);
-
+        chooseCmd(readData, makeCheckSum(datagramByte), datagram.senderAddress(), networkSettings::CLIENT_PORT);
     }
-
 }
 
-void Server::sendDatagram(int checkSum, const char command[],
-                          const QHostAddress address, const int port){
-    //For STAT command
-    QByteArray datagram;
+/*!
+ * \brief Server::sendDatagram
+ * is for sending regular packages like init
+ * using cmdStruct
+ */
+QByteArray Server::prepareSimplePackage(const char *command, int checkSum)
+{
+    QByteArray datagramByte;
     char *intBytes = reinterpret_cast<char*>(&checkSum);
 
-    datagram.append(intBytes, sizeof(checkSum));
-    datagram.append(command, strlen(command) + 1);
+    datagramByte.append(intBytes, sizeof(checkSum));
+    datagramByte.append(command, strlen(command) + 1);
 
-    udpSocket->writeDatagram(datagram, address, port);
-    qDebug()<<"Sent successfully"<<command;
+    return datagramByte;
 }
 
-void Server::sendDatagram(int checkSum, const char command[],
-                          std::time_t currentTime, std::time_t fullTime,
-                          const QHostAddress address, const int port){
-    //For other regular commands
-    QByteArray datagram;
+/*!
+ * \brief Method is for sending packages formed like
+ * using statStruct
+ */
+
+QByteArray Server::prepareStatPackage(const char command[], int checkSum)
+{
+    QByteArray datagramByte;
 
     char *intBytes = reinterpret_cast<char*>(&checkSum);
-    datagram.append(intBytes, sizeof(checkSum));
+    datagramByte.append(intBytes, sizeof(checkSum));
 
+    std::time_t currentTime = time(nullptr);
     char *timeBytes = reinterpret_cast<char*>(&currentTime);
-    datagram.append(timeBytes, sizeof(currentTime));
+    datagramByte.append(timeBytes, sizeof(currentTime));
 
     char *cmdBytes = reinterpret_cast<char*>(&cmdCount);
-    datagram.append(cmdBytes, sizeof(cmdCount));
+    datagramByte.append(cmdBytes, sizeof(cmdCount));
 
-    timeBytes = reinterpret_cast<char*>(&fullTime);
-    datagram.append(timeBytes, sizeof(fullTime));
+    std::time_t workingTimeVar = workingTime(currentTime, startTime);
+    timeBytes = reinterpret_cast<char*>(&workingTimeVar);
+    datagramByte.append(timeBytes, sizeof(workingTimeVar));
 
-    datagram.append(togglesToByte());
+    datagramByte.append(togglesToByte());
 
-    char errorsList[100] = "";
-
+    char errorsList[100]{'\0'};
     makeErrorsPackage(errorsList);
+    datagramByte.append(errorsList, strlen(errorsList));
+    datagramByte.append(command, strlen(command) + 1);
 
-    datagram.append(errorsList, 42);
-
-    datagram.append(command, strlen(command) + 1);
-
-    udpSocket->writeDatagram(datagram, address, port);
-    qDebug()<<"Sent successfully "<<datagram.data();
+    return datagramByte;
 }
 
 //-----------Session Methods-----------//
 
+/*!
+ * \brief Server::addSession
+ * get session_id and check if it is inititalized
+ * and add it if not
+ */
 void Server::addSession(uint16_t id){
     if(isInit(id)){
-        qDebug()<<"Session WAS ALREADY inClientStructit";
+        qDebug()<<"Session WAS ALREADY";
     }
     else
     {
@@ -124,60 +152,69 @@ bool Server::isInit(int id){
 
 //-----------Computing Methods-----------//
 
+/*!
+ * \brief Server::makeCheckSum
+ * make crc of initializing datagram package
+ * and hash it to 4 bytes
+ */
 int Server::makeCheckSum(QByteArray &datagram){
     QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
     return *reinterpret_cast<int*>(hashedDatagram.data());
 }
 
 
-
+/*!
+ * \brief Server::workingTime
+ * if for status packages
+ */
 inline std::time_t Server::workingTime(std::time_t currentTime,
                                std::time_t startTime)
 {
     return currentTime - startTime;
 }
 
-void Server::chooseCmd(QNetworkDatagram &datagram, cmdStruct *readData)
+/*!
+ * \brief Server::chooseCmd
+ * choose what to do with package
+ * due to package data
+ */
+void Server::chooseCmd(cmdStruct *readData, int checkSum,
+                       QHostAddress address, int port)
 {
-    QByteArray datagamBytes = datagram.data();
-    int checkSum = makeCheckSum(datagamBytes);
+    QByteArray datagramSendBytes;
 
-    if(!qstrcmp(readData->command,     cmdSettings::INIT)){
-        sendInit(datagram, readData, checkSum);
+    if(!qstrcmp(readData->command,     cmdSettings::INIT))
+    {
+        addSession(readData->id);
+        datagramSendBytes =
+                prepareSimplePackage(cmdSettings::ASK, checkSum);
     }
 
     if(isInit(readData->id)){
-        if(!qstrcmp(readData->command, cmdSettings::STAT)){
-            sendStat(datagram, checkSum);
-        }
+        if(!qstrcmp(readData->command, cmdSettings::STAT))
+            datagramSendBytes =
+                    prepareStatPackage(cmdSettings::STAT, checkSum);
 
         if(!qstrcmp(readData->command, cmdSettings::END)){
             readEnd(readData);
+            datagramSendBytes =
+                    prepareSimplePackage(cmdSettings::END, checkSum);
         }
+    }
+
+    if(datagramSendBytes.data())
+    {
+        udpSocket->writeDatagram(datagramSendBytes, address, port);
     }
 
 }
 
-void Server::sendInit(QNetworkDatagram &datagram, cmdStruct *readData, int checkSum)
-{
-    addSession(readData->id);
-    sendDatagram(checkSum, cmdSettings::ASK, datagram.senderAddress(),
-                 networkSettings::CLIENT_PORT);
-}
 
-void Server::sendStat(QNetworkDatagram &datagram, int checkSum)
-{
-    std::time_t currentTime = std::time(nullptr);
-    sendDatagram(checkSum, cmdSettings::STAT,
-                 currentTime, workingTime(currentTime, startTime),
-                 datagram.senderAddress(), networkSettings::CLIENT_PORT);
-}
 
 void Server::readEnd(cmdStruct *readData)
 {
     sessions.remove(readData->id);
     qDebug()<<"Session is destroyed"<<readData->id;
-    return;
 }
 
 char Server::togglesToByte()
@@ -191,22 +228,22 @@ char Server::togglesToByte()
     return byteToggles;
 }
 
-void Server::makeErrorsPackage(char * charStr)
+void Server::makeErrorsPackage(char * resStr)
 {
     QList<QCheckBox *> errToggles = ui->groupBox_err->findChildren<QCheckBox*>();
-    const char* errorWord = "ошибка";
-    const char* okWord = "испр.#";
-    char resStr[100]{'\0'};
+
     for(auto et: errToggles)
     {
         if( et->isChecked() )
-            strncat(resStr, errorWord, strlen(errorWord));
+            strncat(resStr, ERROR_WORD, strlen(ERROR_WORD));
         else
-            strncat(resStr, okWord, strlen(errorWord));
+            strncat(resStr, OK_WORD, strlen(OK_WORD));
     }
+
     charSetConv conv;
-    char KOI7ResStr[100]{'\0'}, compressedResStr[100]{'\0'};
-    conv.toKOI7(resStr, KOI7ResStr);
-    conv.compress8To7bits(KOI7ResStr, compressedResStr);
-    qstrcpy(charStr, compressedResStr);
+    char KOI7ResStr[100]{'\0'};
+
+    conv.fromUTF8toKOI7(resStr, KOI7ResStr);
+    conv.compress8To7bits(KOI7ResStr, resStr);
+
 }

@@ -27,8 +27,8 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
-    QPushButton *pushButton;
-    QLineEdit *lineEdit;
+    QPushButton *initPushButton;
+    QLineEdit *addressLineEdit;
     QPushButton *statBtn;
     QTableWidget *sessionTable;
     QPushButton *endSessionBtn;
@@ -84,12 +84,12 @@ public:
         MainWindow->resize(800, 918);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
-        pushButton = new QPushButton(centralwidget);
-        pushButton->setObjectName(QString::fromUtf8("pushButton"));
-        pushButton->setGeometry(QRect(560, 160, 191, 25));
-        lineEdit = new QLineEdit(centralwidget);
-        lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
-        lineEdit->setGeometry(QRect(390, 160, 151, 25));
+        initPushButton = new QPushButton(centralwidget);
+        initPushButton->setObjectName(QString::fromUtf8("initPushButton"));
+        initPushButton->setGeometry(QRect(560, 160, 191, 25));
+        addressLineEdit = new QLineEdit(centralwidget);
+        addressLineEdit->setObjectName(QString::fromUtf8("addressLineEdit"));
+        addressLineEdit->setGeometry(QRect(390, 160, 151, 25));
         statBtn = new QPushButton(centralwidget);
         statBtn->setObjectName(QString::fromUtf8("statBtn"));
         statBtn->setGeometry(QRect(560, 220, 191, 25));
@@ -271,9 +271,9 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
-        pushButton->setText(QCoreApplication::translate("MainWindow", "Send package", nullptr));
-        lineEdit->setText(QCoreApplication::translate("MainWindow", "127.0.0.1:4335", nullptr));
-        lineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "init/status", nullptr));
+        initPushButton->setText(QCoreApplication::translate("MainWindow", "Send init", nullptr));
+        addressLineEdit->setText(QCoreApplication::translate("MainWindow", "127.0.0.1:4335", nullptr));
+        addressLineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "init/status", nullptr));
         statBtn->setText(QCoreApplication::translate("MainWindow", "Status", nullptr));
         QTableWidgetItem *___qtablewidgetitem = sessionTable->horizontalHeaderItem(0);
         ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "Session id", nullptr));

@@ -1,6 +1,7 @@
 #ifndef SERVERSETTINGS_H
 #define SERVERSETTINGS_H
 
+
 #include <QHostAddress>
 
 namespace networkSettings
