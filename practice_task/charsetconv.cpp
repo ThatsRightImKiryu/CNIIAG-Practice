@@ -19,26 +19,24 @@
 char *charSetConv::charSetConverter(char *src, char *dst, charSets toCharSetId, charSets fromCharSetId)
 {
     iconv_t cd;
+
     size_t inleft = strlen(src)+1;
     size_t outleft = 100;
-    int rc;
     const char* toCharSet = chooseCharSetById(toCharSetId);
     const char* fromCharSet = chooseCharSetById(fromCharSetId);
 
-    if ((cd = iconv_open(toCharSet, fromCharSet)) == (iconv_t)(-1)) {
-        fprintf(stderr, "Cannot open converter from %s to %s\n",
-                                           toCharSet, fromCharSet);
-//        exit(8);
-    }
+    if ((cd = iconv_open(toCharSet, fromCharSet)) == (iconv_t)(-1))
+        qWarning()<<"Cannot open converter from"<<toCharSet<<"to"<<fromCharSet;
 
     char   *inptr = src;
     char   *outptr = dst;
 
+    int rc;
     rc = iconv(cd, &inptr, &inleft, &outptr, &outleft);
-    if (rc == -1) {
-        fprintf(stderr, "Error in converting characters\n");
-        exit(8);
-    }
+
+    if (rc == -1)
+        qWarning()<<"Error in converting characters";
+
     iconv_close(cd);
     qstrcpy(dst, dst);
 
