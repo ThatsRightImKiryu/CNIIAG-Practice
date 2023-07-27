@@ -1,20 +1,11 @@
 #include "charsetconv.h"
 #include <QDebug>
+#include <iconv.h>
+#include <codecvt>
+#include <set>
+#include <iostream>
 
-FromUTF8ToKOI7Converter::FromUTF8ToKOI7Converter()
-{
-    const char* toCharSet = chooseCharSetById(charSets::KOI7);
-    const char* fromCharSet = chooseCharSetById(charSets::UTF8);
 
-    cd = iconv_open(toCharSet, fromCharSet);
-    if (cd == (iconv_t)(-1))
-        qWarning()<<"Cannot open converter from"<<toCharSet<<"to"<<fromCharSet;
-}
-
-FromUTF8ToKOI7Converter::~FromUTF8ToKOI7Converter()
-{
-    iconv_close(cd);
-}
 /*!
  * \brief charSetConv::charSetConverter
  * using src and dst string to convert src from
@@ -25,24 +16,59 @@ FromUTF8ToKOI7Converter::~FromUTF8ToKOI7Converter()
  * \param fromCharSetId is int from enum charSets to convert to
  * \return
  */
-char *FromUTF8ToKOI7Converter::convertFromUTF8ToKOI7(char *src, char *dst)
+char *charSetConv::charSetConverter(char *src, char *dst, charSets toCharSetId, charSets fromCharSetId)
 {
-    size_t inleft = strlen(src) + 1;
-    size_t outleft = MAX_DST_SIZE;
+    iconv_t cd;
+    size_t inleft = strlen(src)+1;
+    size_t outleft = 100;
+    int rc;
+    const char* toCharSet = chooseCharSetById(toCharSetId);
+    const char* fromCharSet = chooseCharSetById(fromCharSetId);
+
+    if ((cd = iconv_open(toCharSet, fromCharSet)) == (iconv_t)(-1)) {
+        fprintf(stderr, "Cannot open converter from %s to %s\n",
+                                           toCharSet, fromCharSet);
+        exit(8);
+    }
 
     char   *inptr = src;
     char   *outptr = dst;
 
-    int rc = iconv(cd, &inptr, &inleft, &outptr, &outleft);
+    rc = iconv(cd, &inptr, &inleft, &outptr, &outleft);
     if (rc == -1) {
         fprintf(stderr, "Error in converting characters\n");
         exit(8);
     }
+    iconv_close(cd);
+    qstrcpy(dst, dst);
 
     return dst;
 
 };
 
+/*!
+ * \brief charSetConv::fromUTF8toKOI7 is literraly
+ * charSetConv::charSetConverter with toCharSetId = KOI7 and
+ * toCharSetId = UTF8. Set result to dst and return it.
+ * maxStrLen(src) == 50, maxStrLen(dst) == 100.
+ */
+char* charSetConv::fromUTF8toKOI7(char *src, char *dst)
+{
+    charSetConverter(src, dst, charSets::KOI7, charSets::UTF8);
+    return dst;
+}
+
+/*!
+ * \brief charSetConv::fromKOI7toUTF8 is literraly
+ * charSetConv::charSetConverter with toCharSetId = UTF8 and
+ * toCharSetId = KOI7. Set result to dst and return it.
+ * maxStrLen(src) == 50, maxStrLen(dst) == 100.
+ */
+char* charSetConv::fromKOI7toUTF8(char *src, char *dst)
+{
+    charSetConverter(src, dst, charSets::UTF8, charSets::KOI7);
+    return dst;
+}
 
 /*!
  * \brief charSetConv::compress8To7bits
@@ -51,7 +77,7 @@ char *FromUTF8ToKOI7Converter::convertFromUTF8ToKOI7(char *src, char *dst)
  * maxStrLen(src) == 114, maxStrLen(dst) == 100.
  * \return
  */
-char* FromUTF8ToKOI7Converter::compress8To7bits(char *src, char *dst)
+char* charSetConv::compress8To7bits(char *src, char *dst)
 {
     int oldInd = 0;
     int newLen = strlen(src) - strlen(src) / 7;
@@ -78,7 +104,7 @@ char* FromUTF8ToKOI7Converter::compress8To7bits(char *src, char *dst)
  * maxStrLen(src) == 85, maxStrLen(dst) == 100.
  * \return
  */
-char* FromUTF8ToKOI7Converter::decompress7To8bits(char *src, char *dst)
+char* charSetConv::decompress7To8bits(char *src, char *dst)
 {
     unsigned char buf[100]{'\0'};
     int newInd = 0;
@@ -104,7 +130,7 @@ char* FromUTF8ToKOI7Converter::decompress7To8bits(char *src, char *dst)
  * while charSets::KOI7 == 0.
  * \return
  */
-const char* FromUTF8ToKOI7Converter::chooseCharSetById(charSets charSetId)
+const char* charSetConv::chooseCharSetById(charSets charSetId)
 {
     switch( charSetId)
     {

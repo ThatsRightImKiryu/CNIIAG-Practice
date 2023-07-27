@@ -1,9 +1,7 @@
 #ifndef CHARSETCONV_H
 #define CHARSETCONV_H
-#include <iconv.h>
+#include <string>
 
-
-#define MAX_DST_SIZE 100
 enum class charSets : int
 {
     KOI7 = 0,
@@ -15,20 +13,17 @@ enum class charSets : int
  * use to convert chars from of encoding to another
  * and compressing-decompressing bytes
  */
-class FromKOI7ToUTF8Converter
+class charSetConv
 {
 public:
-    FromKOI7ToUTF8Converter();
-    char* convertFromKOI7ToUTF8(char *src, char *dst);
+    charSetConv(){};
+    char* charSetConverter(char *src, char *dst, charSets toCharSetId, charSets fromCharSetId);
+    char* fromUTF8toKOI7(char *src, char *dst);
+    char* fromKOI7toUTF8(char *src, char *dst);
     char* compress8To7bits(char *src, char *dst);
     char* decompress7To8bits(char *src, char *dst);
-    ~FromKOI7ToUTF8Converter();
-
-private:
     const char* chooseCharSetById(charSets charSetId);
-
-private:
-    iconv_t cd;
+    ~charSetConv(){};
 };
 
 #endif // CHARSETCONV_H

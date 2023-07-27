@@ -78,7 +78,7 @@ void Server::readPendingDatagrams()
 
         cmdStruct  *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
 
-        qDebug()<<"Read successfully "<<readData->command<<readData;
+        qDebug()<<"Read successfully "<<readData->command;
         chooseCmd(readData, makeCheckSum(datagramByte), datagram.senderAddress(), networkSettings::CLIENT_PORT);
     }
 }
@@ -167,9 +167,14 @@ uint16_t Server::makeCheckSum(QByteArray &datagramByte)
     uint16_t *word = reinterpret_cast<uint16_t *>(datagramByte.data());
     uint16_t checkSum = 0;
 
-    for(int i = 0; i < datagramByte.size() / 2 + datagramByte.size() % 2; i++)
+    for(int i = 0; i < datagramByte.size() / 2; i++)
         checkSum += *(word++);
-    qDebug()<<"SIZE DATA"<<datagramByte.size()<<datagramByte;
+
+    if(datagramByte.size() % 2)
+    {
+        char *oddLastWord = reinterpret_cast<char *>(datagramByte.data());
+        checkSum += *oddLastWord;
+    }
     return ~checkSum;
 }
 
@@ -242,13 +247,13 @@ char Server::togglesToByte()
 void Server::makeErrorsPackage(char * resStr)
 {
     QList<QCheckBox *> errToggles = ui->groupBox_err->findChildren<QCheckBox*>();
-    charSetConv conv;
+    FromUTF8ToKOI7Converter conv;
 
     char KOI7_ERROR_WORD[ERROR_BLOCK_SIZE]{'\0'};
-    conv.fromUTF8toKOI7(errorSettings::ERROR_WORD, KOI7_ERROR_WORD);
+    conv.convertFromUTF8ToKOI7(errorSettings::ERROR_WORD, KOI7_ERROR_WORD);
 
     char KOI7_OK_WORD[ERROR_BLOCK_SIZE]{'\0'};
-    conv.fromUTF8toKOI7(errorSettings::OK_WORD, KOI7_OK_WORD);
+    conv.convertFromUTF8ToKOI7(errorSettings::OK_WORD, KOI7_OK_WORD);
 
 
     for(auto et: errToggles)

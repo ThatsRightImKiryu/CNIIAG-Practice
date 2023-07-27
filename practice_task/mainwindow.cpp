@@ -7,24 +7,6 @@
 #include <charsetconv.h>
 #include <constants.h>
 
-namespace labels
-{
-    const char *TOGGLE_ON = "ON";
-    const char *TOGGLE_OFF = "OFF";
-    const char *TOGGLE_OK = "Correct";
-    const char *TOGGLE_INVALID = "INVALID";
-}
-
-namespace deviceStates
-{
-//STATES
-    const char *TOGGLE_OK = "испр.#";
-    const char *TOGGLE_INVALID = "ошибка";
-//SIZES
-    const int TOGGLE_OK_SIZE = strlen(TOGGLE_OK);
-    const int TOGGLE_INVALID_SIZE = strlen(TOGGLE_INVALID);
-    const int MAX_STATE_SIZE = 13;
-}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -180,10 +162,14 @@ uint16_t MainWindow::makeCheckSum(QByteArray &datagramByte)
     uint16_t *word = reinterpret_cast<uint16_t *>(datagramByte.data());
     uint16_t checkSum = 0;
 
-    for(int i = 0; i < datagramByte.size() / 2 + datagramByte.size() % 2; i++)
+    for(int i = 0; i < datagramByte.size() / 2; i++)
         checkSum += *(word++);
-    qDebug()<<"SIZE DATA"<<datagramByte.size()<<datagramByte;
 
+    if(datagramByte.size() % 2)
+    {
+        char *oddLastWord = reinterpret_cast<char *>(datagramByte.data());
+        checkSum += *oddLastWord;
+    }
     return ~checkSum;
 }
 
@@ -234,12 +220,12 @@ void MainWindow::setProcessedToggles(char *errorList, char byteToggles)
 
     char decompressedErrors[ERROR_DECOMPRESSED_SIZE +1]{'\0'},
          errorsRes[ERROR_CONVERTED_SIZE + 1]{'\0'};
-    charSetConv conv;
+    FromKOI7ToUTF8Converter conv;
 
     setByteToToggles(byteToggles);
 
     conv.decompress7To8bits(prepareErrorList(errorList), decompressedErrors);
-    conv.fromKOI7toUTF8(decompressedErrors, errorsRes);
+    conv.convertFromKOI7ToUTF8(decompressedErrors, errorsRes);
     setErrors(errorsRes);
 
 }
