@@ -10,7 +10,7 @@
 #include "string"
 
 typedef struct {
-    int checkSum;
+    uint16_t checkSum;
     char command[];
 } cmdStruct;
 
@@ -21,7 +21,7 @@ typedef struct {
 #pragma pack(push, 1)
 
 typedef struct {
-    int checkSum;
+    uint16_t checkSum;
     time_t currentTime;
     uint16_t cmdCount;
     uint64_t fullTime;
@@ -62,7 +62,7 @@ public:
 
 public:
     QByteArray prepareDatagram(const char command[], uint16_t id);
-    int makeCheckSum(QByteArray &datagram);
+    uint16_t makeCheckSum(QByteArray &datagram);
     void setByteToToggles(uint8_t byteToggles);
     inline QString makeFullAddress(QHostAddress address, int port);
     void setAddressAndPortFromLineEdit(QHostAddress &address, int &port);
@@ -72,7 +72,7 @@ public:
 public:
     void chooseCmd(QHostAddress address, int port, cmdStruct *readData);
     void readStat(StatStruct &readStatData);
-    void readAsk(QHostAddress address, int port, int pkgCheckSum);
+    void readAsk(QHostAddress address, int port, uint16_t pkgCheckSum);
     void readEnd(QString fullAddress);
     void sendEnd(QHostAddress address, int port);
 
@@ -80,7 +80,7 @@ public:
 
 private:
     uint16_t clientId;
-    int checkSum = 0;
+    uint16_t checkSum = 0;
     QSet<QString> addresses;
     QUdpSocket *udpSocket;
 

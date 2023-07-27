@@ -1,11 +1,14 @@
 #include "server.h"
 #include "ui_server.h"
+
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include "iostream"
 #include <QCryptographicHash>
+
 #include <Serversettings.h>
 #include <charsetconv.h>
+#include <constants.h>
 
 /*!
  \class Server::Server(QWidget *parent)
@@ -57,7 +60,8 @@ void Server::initSocket(QHostAddress address, int port)
 
 /*!
  * \brief Server::readPendingDatagrams
- * wating udpDatagram to read using cmdStruct.
+ * wating udpDatagram to read using cmdStruct.#include <constants.h>
+
  * if data includes form of cmdStruct
  * methd initialize client.
  * If it is -> check if command is status requset
@@ -74,7 +78,7 @@ void Server::readPendingDatagrams()
 
         cmdStruct  *readData = reinterpret_cast<cmdStruct *>(datagramByte.data());
 
-        qDebug()<<"Read successfully "<<readData->command<<readData->id;
+        qDebug()<<"Read successfully "<<readData->command<<readData;
         chooseCmd(readData, makeCheckSum(datagramByte), datagram.senderAddress(), networkSettings::CLIENT_PORT);
     }
 }
@@ -84,13 +88,13 @@ void Server::readPendingDatagrams()
  * is for sending regular packages like init
  * using cmdStruct
  */
-QByteArray Server::prepareSimplePackage(const char *command, int checkSum)
+QByteArray Server::prepareSimplePackage(const char *command, uint16_t checkSum)
 {
     QByteArray datagramByte;
     char *intBytes = reinterpret_cast<char*>(&checkSum);
 
     datagramByte.append(intBytes, sizeof(checkSum));
-    datagramByte.append(command, strlen(command) + 1);
+    datagramByte.append(command, strlen(command));
 
     return datagramByte;
 }
@@ -100,7 +104,7 @@ QByteArray Server::prepareSimplePackage(const char *command, int checkSum)
  * using statStruct
  */
 
-QByteArray Server::prepareStatPackage(const char command[], int checkSum)
+QByteArray Server::prepareStatPackage(const char command[], uint16_t checkSum)
 {
     QByteArray datagramByte;
 
@@ -120,10 +124,11 @@ QByteArray Server::prepareStatPackage(const char command[], int checkSum)
 
     datagramByte.append(togglesToByte());
 
-    char errorsList[100]{'\0'};
+    char errorsList[ERROR_LIST_MAXSIZE]{'\0'};
     makeErrorsPackage(errorsList);
     datagramByte.append(errorsList, strlen(errorsList));
-    datagramByte.append(command, strlen(command) + 1);
+
+    datagramByte.append(command, strlen(command));
 
     return datagramByte;
 }
@@ -157,9 +162,15 @@ bool Server::isInit(int id){
  * make crc of initializing datagram package
  * and hash it to 4 bytes
  */
-int Server::makeCheckSum(QByteArray &datagram){
-    QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
-    return *reinterpret_cast<int*>(hashedDatagram.data());
+uint16_t Server::makeCheckSum(QByteArray &datagramByte)
+{
+    uint16_t *word = reinterpret_cast<uint16_t *>(datagramByte.data());
+    uint16_t checkSum = 0;
+
+    for(int i = 0; i < datagramByte.size() / 2 + datagramByte.size() % 2; i++)
+        checkSum += *(word++);
+    qDebug()<<"SIZE DATA"<<datagramByte.size()<<datagramByte;
+    return ~checkSum;
 }
 
 
@@ -178,7 +189,7 @@ inline std::time_t Server::workingTime(std::time_t currentTime,
  * choose what to do with package
  * due to package data
  */
-void Server::chooseCmd(cmdStruct *readData, int checkSum,
+void Server::chooseCmd(cmdStruct *readData, uint16_t checkSum,
                        QHostAddress address, int port)
 {
     QByteArray datagramSendBytes;
@@ -231,19 +242,22 @@ char Server::togglesToByte()
 void Server::makeErrorsPackage(char * resStr)
 {
     QList<QCheckBox *> errToggles = ui->groupBox_err->findChildren<QCheckBox*>();
+    charSetConv conv;
+
+    char KOI7_ERROR_WORD[ERROR_BLOCK_SIZE]{'\0'};
+    conv.fromUTF8toKOI7(errorSettings::ERROR_WORD, KOI7_ERROR_WORD);
+
+    char KOI7_OK_WORD[ERROR_BLOCK_SIZE]{'\0'};
+    conv.fromUTF8toKOI7(errorSettings::OK_WORD, KOI7_OK_WORD);
+
 
     for(auto et: errToggles)
     {
         if( et->isChecked() )
-            strncat(resStr, ERROR_WORD, strlen(ERROR_WORD));
+            strncat(resStr, KOI7_ERROR_WORD, ERROR_BLOCK_SIZE);
         else
-            strncat(resStr, OK_WORD, strlen(OK_WORD));
+            strncat(resStr, KOI7_OK_WORD, ERROR_BLOCK_SIZE);
     }
 
-    charSetConv conv;
-    char KOI7ResStr[100]{'\0'};
-
-    conv.fromUTF8toKOI7(resStr, KOI7ResStr);
-    conv.compress8To7bits(KOI7ResStr, resStr);
-
+    conv.compress8To7bits(resStr, resStr);
 }

@@ -138,6 +138,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		../practice_task/practice_task.pro ../practice_task/charsetconv.h \
+		../practice_task/constants.h \
 		../practice_task/mainwindow.h \
 		../practice_task/Clientsettings.h ../practice_task/charsetconv.cpp \
 		../practice_task/main.cpp \
@@ -327,7 +328,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../practice_task/charsetconv.h ../practice_task/mainwindow.h ../practice_task/Clientsettings.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../practice_task/charsetconv.h ../practice_task/constants.h ../practice_task/mainwindow.h ../practice_task/Clientsettings.h $(DISTDIR)/
 	$(COPY_FILE) --parents ../practice_task/charsetconv.cpp ../practice_task/main.cpp ../practice_task/mainwindow.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../practice_task/mainwindow.ui $(DISTDIR)/
 
@@ -399,7 +400,8 @@ main.o: ../practice_task/main.cpp ../practice_task/mainwindow.h
 mainwindow.o: ../practice_task/mainwindow.cpp ../practice_task/mainwindow.h \
 		ui_mainwindow.h \
 		../practice_task/Clientsettings.h \
-		../practice_task/charsetconv.h
+		../practice_task/charsetconv.h \
+		../practice_task/constants.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../practice_task/mainwindow.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 

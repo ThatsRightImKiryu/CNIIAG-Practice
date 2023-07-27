@@ -16,6 +16,7 @@ SOURCES += \
 
 HEADERS += \
     charsetconv.h \
+    constants.h \
     mainwindow.h \
     Clientsettings.h
 

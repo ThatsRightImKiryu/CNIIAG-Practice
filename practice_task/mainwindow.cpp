@@ -1,9 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <string.h>
+
 #include <QCryptographicHash>
+
 #include <Clientsettings.h>
 #include <charsetconv.h>
+#include <constants.h>
 
 namespace labels
 {
@@ -127,9 +129,9 @@ void MainWindow::setClientId()
     */
     uint64_t maxClientId = 1;
     maxClientId <<= (sizeof(clientId)*8 - 1);
-
     srand(time(nullptr));
     clientId = rand() % maxClientId;
+    qDebug()<<"ID"<<clientId;
 
 }
 void MainWindow::initSocket(QHostAddress address, int port)
@@ -173,9 +175,16 @@ void MainWindow::sendDatagram(QByteArray datagramByte,
 }
 
 
-int MainWindow::makeCheckSum(QByteArray &datagram){
-    QByteArray hashedDatagram = QCryptographicHash::hash(datagram, QCryptographicHash::Md5);
-    return *reinterpret_cast<int*>(hashedDatagram.data());
+uint16_t MainWindow::makeCheckSum(QByteArray &datagramByte)
+{
+    uint16_t *word = reinterpret_cast<uint16_t *>(datagramByte.data());
+    uint16_t checkSum = 0;
+
+    for(int i = 0; i < datagramByte.size() / 2 + datagramByte.size() % 2; i++)
+        checkSum += *(word++);
+    qDebug()<<"SIZE DATA"<<datagramByte.size()<<datagramByte;
+
+    return ~checkSum;
 }
 
 
@@ -306,6 +315,10 @@ void MainWindow::chooseCmd(QHostAddress address, int port, cmdStruct *readData)
         return readEnd(fullAddress);
     }
 
+    /*!
+     * \brief readStatData is a reinterpreted to statistics
+     * package of old data
+     */
     StatStruct *readStatData = reinterpret_cast<StatStruct *>(readData);
     if(!qstrcmp(readStatData->command, cmdSettings::STAT))
         readStat(*readStatData);
@@ -318,9 +331,9 @@ QByteArray MainWindow::prepareDatagram(const char command[], uint16_t id)
     char *idBytes = reinterpret_cast<char*>(&id);
 
     datagramByte.append(idBytes, sizeof(id));
-    datagramByte.append(command, strlen(command) + 1);
+    datagramByte.append(command, strlen(command));
 
-    if(!strcmp(command, cmdSettings::INIT) && !checkSum)
+    if(!qstrcmp(command, cmdSettings::INIT) && !checkSum)
         checkSum = makeCheckSum(datagramByte);
 
     qDebug()<<"Sending"<<command;
@@ -334,7 +347,7 @@ void MainWindow::readStat(StatStruct &readStatData)
    setProcessedToggles(readStatData.errorList, readStatData.byteToggles);
 }
 
-void MainWindow::readAsk(QHostAddress address, int port, int pkgCheckSum)
+void MainWindow::readAsk(QHostAddress address, int port, uint16_t pkgCheckSum)
 {
     if(pkgCheckSum==checkSum && //crc==got_from_package and init
            !isInit(address, port))

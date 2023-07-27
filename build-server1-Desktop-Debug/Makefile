@@ -137,6 +137,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		../server/server1.pro ../server/charsetconv.h \
+		../server/constants.h \
 		../server/server.h \
 		../server/Serversettings.h ../server/charsetconv.cpp \
 		../server/main.cpp \
@@ -326,7 +327,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../server/charsetconv.h ../server/server.h ../server/Serversettings.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../server/charsetconv.h ../server/constants.h ../server/server.h ../server/Serversettings.h $(DISTDIR)/
 	$(COPY_FILE) --parents ../server/charsetconv.cpp ../server/main.cpp ../server/server.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../server/server.ui $(DISTDIR)/
 
@@ -392,7 +393,8 @@ main.o: ../server/main.cpp ../server/server.h
 server.o: ../server/server.cpp ../server/server.h \
 		ui_server.h \
 		../server/Serversettings.h \
-		../server/charsetconv.h
+		../server/charsetconv.h \
+		../server/constants.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o server.o ../server/server.cpp
 
 ####### Install

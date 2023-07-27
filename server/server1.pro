@@ -16,6 +16,7 @@ SOURCES += \
 
 HEADERS += \
     charsetconv.h \
+    constants.h \
     server.h \
     Serversettings.h
 

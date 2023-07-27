@@ -10,20 +10,22 @@
 #include <vector>
 #include <QNetworkDatagram>
 
+
+
 typedef struct {
     uint16_t id;
     char command[];
 } cmdStruct;
 
 typedef struct {
-    int checkSum;
+    uint16_t checkSum;
     char command[];
 } ServerStruct;
 
 #pragma pack(push, 1)
 
 typedef struct {
-    int checkSum;
+    uint16_t checkSum;
     time_t currentTime;
     uint16_t cmdCount;
     uint64_t fullTime;
@@ -32,14 +34,10 @@ typedef struct {
 
 #pragma pack(pop)
 
-#define ERROR_WORD "ошибка"
-#define OK_WORD "испр.#"
-
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Server; }
 QT_END_NAMESPACE
-
 
 /*!
 \brief Device emulator
@@ -67,11 +65,11 @@ public:
 public:
     void initSocket(QHostAddress address, int port);
     void readPendingDatagrams();
-    QByteArray prepareSimplePackage(const char *command, int checkSum);
-    QByteArray prepareStatPackage(const char command[], int checkSum);
+    QByteArray prepareSimplePackage(const char *command, uint16_t checkSum);
+    QByteArray prepareStatPackage(const char command[], uint16_t checkSum);
 
 public:
-    void chooseCmd(cmdStruct *readData, int checkSum,
+    void chooseCmd(cmdStruct *readData, uint16_t checkSum,
                    QHostAddress address, int port);
     void readEnd(cmdStruct *readData);
 
@@ -81,7 +79,7 @@ public:
 
 private:
     char togglesToByte();
-    int makeCheckSum(QByteArray &datagram);
+    uint16_t makeCheckSum(QByteArray &datagramByte);
     void makeErrorsPackage(char * charStr);
     inline std::time_t workingTime(std::time_t currentTime,
                                    std::time_t startTime);
