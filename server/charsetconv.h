@@ -4,6 +4,8 @@
 
 
 #define MAX_DST_SIZE 100
+#define MAX_COMPRESSED_SIZE 86
+
 enum class charSets : int
 {
     KOI7 = 0,

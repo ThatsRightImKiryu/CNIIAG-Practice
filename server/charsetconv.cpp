@@ -9,6 +9,8 @@ FromUTF8ToKOI7Converter::FromUTF8ToKOI7Converter()
     cd = iconv_open(toCharSet, fromCharSet);
     if (cd == (iconv_t)(-1))
         qWarning()<<"Cannot open converter from"<<toCharSet<<"to"<<fromCharSet;
+    else
+        qDebug()<<"FromUTF8ToKOI7Converter opened successfully";
 }
 
 FromUTF8ToKOI7Converter::~FromUTF8ToKOI7Converter()
@@ -54,8 +56,8 @@ char *FromUTF8ToKOI7Converter::convertFromUTF8ToKOI7(char *src, char *dst)
 char* FromUTF8ToKOI7Converter::compress8To7bits(char *src, char *dst)
 {
     int oldInd = 0;
-    int newLen = strlen(src) - strlen(src) / 7;
-    unsigned char buf[100]{'\0'};
+    const int newLen = strlen(src) - strlen(src) / 7 + 1;
+    unsigned char *buf = new unsigned char[newLen]{'\0'};
 
     for(int newInd = 0; newInd < newLen; newInd++)
     {
@@ -68,6 +70,9 @@ char* FromUTF8ToKOI7Converter::compress8To7bits(char *src, char *dst)
     }
 
     qstrcpy(dst, (char*)buf);
+
+    if(!buf) delete[] buf;
+
     return dst;
 }
 
@@ -80,9 +85,9 @@ char* FromUTF8ToKOI7Converter::compress8To7bits(char *src, char *dst)
  */
 char* FromUTF8ToKOI7Converter::decompress7To8bits(char *src, char *dst)
 {
-    unsigned char buf[100]{'\0'};
     int newInd = 0;
-    size_t newLen = strlen(src) + strlen(src) / 7 + 1;
+    const size_t newLen = strlen(src) + strlen(src) / 7 + 1;
+    unsigned char *buf = new unsigned char[newLen]{'\0'};
     for(size_t oldInd = 0; oldInd < newLen; oldInd++)
     {
         unsigned char currentChar = src[oldInd];
@@ -92,6 +97,8 @@ char* FromUTF8ToKOI7Converter::decompress7To8bits(char *src, char *dst)
             newInd++;
     }
     qstrcpy(dst, (char*)buf);
+
+    if(!buf) delete[] buf;
 
     return dst;
 }

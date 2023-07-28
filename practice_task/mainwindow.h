@@ -6,8 +6,7 @@
 #include <QGroupBox>
 #include <QTableWidget>
 #include <QNetworkDatagram>
-#include "iostream"
-#include "string"
+#include <charsetconv.h>
 
 typedef struct {
     uint16_t checkSum;
@@ -62,7 +61,7 @@ public:
 
 public:
     QByteArray prepareDatagram(const char command[], uint16_t id);
-    uint16_t makeCheckSum(QByteArray &datagram);
+    uint16_t makeCheckSum(QByteArray &datagramByte);
     void setByteToToggles(uint8_t byteToggles);
     inline QString makeFullAddress(QHostAddress address, int port);
     void setAddressAndPortFromLineEdit(QHostAddress &address, int &port);
@@ -80,9 +79,11 @@ public:
 
 private:
     uint16_t clientId;
+    uint64_t maxClientId = 1;
     uint16_t checkSum = 0;
     QSet<QString> addresses;
     QUdpSocket *udpSocket;
+    FromKOI7ToUTF8Converter conv;
 
 private:
     Ui::MainWindow *ui;

@@ -3,12 +3,7 @@
 
 #include <QMainWindow>
 #include <QUdpSocket>
-#include "iostream"
-#include "string"
-#include <QObject>
-#include <QHostAddress>
-#include <vector>
-#include <QNetworkDatagram>
+#include <charsetconv.h>
 
 
 
@@ -89,10 +84,11 @@ private:
 
 private:
     uint16_t cmdCount = 0;
-    char byteToggles = 0;
+    #define MAX_CMD_COUNT 65536 - 1
     std::time_t startTime = std::time(nullptr);
     QSet<int> sessions;
     QUdpSocket *udpSocket;
+    FromUTF8ToKOI7Converter conv;
 
 
 };

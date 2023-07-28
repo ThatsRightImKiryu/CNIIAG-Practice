@@ -387,13 +387,14 @@ compiler_clean: compiler_moc_predefs_clean compiler_uic_clean
 charsetconv.o: ../server/charsetconv.cpp ../server/charsetconv.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o charsetconv.o ../server/charsetconv.cpp
 
-main.o: ../server/main.cpp ../server/server.h
+main.o: ../server/main.cpp ../server/server.h \
+		../server/charsetconv.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../server/main.cpp
 
 server.o: ../server/server.cpp ../server/server.h \
+		../server/charsetconv.h \
 		ui_server.h \
 		../server/Serversettings.h \
-		../server/charsetconv.h \
 		../server/constants.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o server.o ../server/server.cpp
 

@@ -1,10 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QCryptographicHash>
-
 #include <Clientsettings.h>
-#include <charsetconv.h>
 #include <constants.h>
 
 
@@ -109,11 +106,9 @@ void MainWindow::setClientId()
      * Max value of type due to client id type.
      * For example: sizeof(uint16_t clientId) == 65536
     */
-    uint64_t maxClientId = 1;
     maxClientId <<= (sizeof(clientId)*8 - 1);
     srand(time(nullptr));
     clientId = rand() % maxClientId;
-    qDebug()<<"ID"<<clientId;
 
 }
 void MainWindow::initSocket(QHostAddress address, int port)
@@ -220,7 +215,6 @@ void MainWindow::setProcessedToggles(char *errorList, char byteToggles)
 
     char decompressedErrors[ERROR_DECOMPRESSED_SIZE +1]{'\0'},
          errorsRes[ERROR_CONVERTED_SIZE + 1]{'\0'};
-    FromKOI7ToUTF8Converter conv;
 
     setByteToToggles(byteToggles);
 

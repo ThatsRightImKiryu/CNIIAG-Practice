@@ -3,11 +3,8 @@
 
 #include <QUdpSocket>
 #include <QNetworkDatagram>
-#include "iostream"
-#include <QCryptographicHash>
 
 #include <Serversettings.h>
-#include <charsetconv.h>
 #include <constants.h>
 
 /*!
@@ -71,7 +68,12 @@ void Server::readPendingDatagrams()
 {
     while (udpSocket->hasPendingDatagrams()) {
 
-        cmdCount++;
+        if(cmdCount == MAX_CMD_COUNT)
+        {
+            qDebug()<<"cmdCount overflow";
+            cmdCount = 0;
+        }
+        ++cmdCount;
 
         QNetworkDatagram datagram = udpSocket->receiveDatagram();
         QByteArray datagramByte = datagram.data();
@@ -235,7 +237,7 @@ void Server::readEnd(cmdStruct *readData)
 
 char Server::togglesToByte()
 {
-    byteToggles = 0;
+    char byteToggles = 0;
     QList<QCheckBox *> toggles = ui->groupBox->findChildren<QCheckBox*>();
     for(int i = 0; i < toggles.size(); i++)
     {
@@ -247,7 +249,6 @@ char Server::togglesToByte()
 void Server::makeErrorsPackage(char * resStr)
 {
     QList<QCheckBox *> errToggles = ui->groupBox_err->findChildren<QCheckBox*>();
-    FromUTF8ToKOI7Converter conv;
 
     char KOI7_ERROR_WORD[ERROR_BLOCK_SIZE]{'\0'};
     conv.convertFromUTF8ToKOI7(errorSettings::ERROR_WORD, KOI7_ERROR_WORD);

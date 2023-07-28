@@ -366,6 +366,7 @@ compiler_moc_header_make_all: moc_mainwindow.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_mainwindow.cpp
 moc_mainwindow.cpp: ../practice_task/mainwindow.h \
+		../practice_task/charsetconv.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/kiryu/projects/qt/build-practice_task-Desktop-Debug/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/kiryu/projects/qt/practice_task -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../practice_task/mainwindow.h -o moc_mainwindow.cpp
@@ -394,13 +395,14 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 charsetconv.o: ../practice_task/charsetconv.cpp ../practice_task/charsetconv.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o charsetconv.o ../practice_task/charsetconv.cpp
 
-main.o: ../practice_task/main.cpp ../practice_task/mainwindow.h
+main.o: ../practice_task/main.cpp ../practice_task/mainwindow.h \
+		../practice_task/charsetconv.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../practice_task/main.cpp
 
 mainwindow.o: ../practice_task/mainwindow.cpp ../practice_task/mainwindow.h \
+		../practice_task/charsetconv.h \
 		ui_mainwindow.h \
 		../practice_task/Clientsettings.h \
-		../practice_task/charsetconv.h \
 		../practice_task/constants.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../practice_task/mainwindow.cpp
 
